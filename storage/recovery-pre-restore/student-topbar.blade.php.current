@@ -1,0 +1,44 @@
+@php
+    $menuProfile = match ($locale) {
+        'ar' => ['profile' => 'الملف الشخصي', 'payment' => 'الدفع', 'logout' => 'تسجيل الخروج', 'languages' => 'اللغات', 'premium' => 'الانتقال إلى بريميوم'],
+        'en' => ['profile' => 'Profile', 'payment' => 'Payment', 'logout' => 'Logout', 'languages' => 'Languages', 'premium' => 'Upgrade to Premium'],
+        default => ['profile' => 'Profile', 'payment' => 'Paiement', 'logout' => 'Déconnexion', 'languages' => 'Langues', 'premium' => 'Passer au Premium'],
+    };
+@endphp
+
+<header class="student-topbar glass-card">
+    <a class="course-brand" href="{{ route($routeName ?? 'teacher.index.locale', ['locale' => $locale]) }}">
+        <img src="{{ asset('logo.jpeg') }}" alt="EasyPsi logo" class="course-brand-logo">
+    </a>
+
+    @if (! empty($topbarTitle ?? null))
+        <div class="student-topbar-title">{{ $topbarTitle }}</div>
+    @endif
+
+    <div class="student-topbar-spacer"></div>
+
+    <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $menuProfile['premium'] }}</a>
+
+    @include('partials.locale-switcher', [
+        'routeName' => $routeName ?? 'teacher.index.locale',
+        'localeMenuStyle' => 'dropdown',
+        'localeMenuLabel' => $menuProfile['languages'],
+    ])
+
+    @auth
+        <div class="student-topbar-menu" data-topbar-menu>
+            <button class="student-avatar" type="button" aria-expanded="false" data-topbar-menu-toggle>
+                {{ strtoupper(Str::substr(auth()->user()->name ?? 'U', 0, 1)) }}
+            </button>
+
+            <div class="student-topbar-menu__dropdown student-topbar-menu__dropdown--profile" data-topbar-menu-dropdown>
+                <a class="student-topbar-menu__option" href="{{ route('student.profile.locale', ['locale' => $locale]) }}">{{ $menuProfile['profile'] }}</a>
+                <a class="student-topbar-menu__option" href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $menuProfile['payment'] }}</a>
+                <form method="POST" action="{{ route('logout.locale', ['locale' => $locale]) }}">
+                    @csrf
+                    <button class="student-topbar-menu__option student-topbar-menu__button" type="submit">{{ $menuProfile['logout'] }}</button>
+                </form>
+            </div>
+        </div>
+    @endauth
+</header>
