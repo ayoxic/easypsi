@@ -20,11 +20,24 @@ class TeacherLesson extends Model
         'level_label',
         'title',
         'slug',
+        'sort_order',
+    ];
+
+    protected $casts = [
+        'sort_order' => 'integer',
     ];
 
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function scopeForAudience($query, string $selection)
+    {
+        $keys = static::query()->distinct()->pluck('level_key')
+            ->filter(fn ($key) => \App\Support\LevelAudience::matches($key, $selection));
+
+        return $query->whereIn('level_key', $keys);
     }
 
     public function assets(): HasMany

@@ -94,6 +94,12 @@
     $levelLabelMap = collect($levelOptions ?? [])->mapWithKeys(fn (array $levelOption): array => [
         $levelOption['key'] => $levelOption['label'],
     ])->all();
+
+    $brandLabel = match ($locale) {
+        'ar' => 'إدارة EasyPsi',
+        'en' => 'EasyPsi Admin',
+        default => 'Admin EasyPsi',
+    };
 @endphp
 
 @section('content')
@@ -101,7 +107,7 @@
         <header class="admin-topbar glass-card">
             <div class="course-brand">
                 <div>
-                    <strong>EasyPsi Admin</strong>
+                    <strong>{{ $brandLabel }}</strong>
                 </div>
             </div>
 
@@ -114,7 +120,7 @@
 
         <section class="admin-hero glass-card">
             <div class="admin-hero-copy">
-                <span class="brand-chip">EasyPsi Admin</span>
+                <span class="brand-chip">{{ $brandLabel }}</span>
                 <h1 class="section-title">{{ $text['title'] }}</h1>
                 <p>{{ $text['subtitle'] }}</p>
             </div>

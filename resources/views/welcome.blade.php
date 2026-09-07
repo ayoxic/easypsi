@@ -239,7 +239,7 @@
             </section>
 
             <section id="levels" class="welcome-masterpiece__section">
-                <div class="welcome-editorial">
+                <div class="welcome-editorial welcome-editorial--meeting">
                     <div class="welcome-editorial__copy welcome-editorial__copy--spotlight welcome-scroll-reveal welcome-scroll-reveal--left welcome-text-reveal">
                         <h2>{{ $copy['levels_title'] }}</h2>
                         <p>{{ $copy['levels_subtitle'] }}</p>

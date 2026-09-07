@@ -25,7 +25,7 @@
 @endphp
 
 <header class="student-topbar glass-card">
-    <a class="course-brand" href="{{ route($routeName ?? 'teacher.index.locale', ['locale' => $locale]) }}">
+    <a class="course-brand" href="{{ $brandHref ?? route($routeName ?? 'teacher.index.locale', ['locale' => $locale]) }}">
         <img src="{{ asset('logo.jpeg') }}" alt="EasyPsi logo" class="course-brand-logo">
     </a>
 
@@ -35,7 +35,9 @@
 
     <div class="student-topbar-spacer"></div>
 
-    <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $menuProfile['premium'] }}</a>
+    @if (($showPremiumButton ?? true) === true)
+        <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $menuProfile['premium'] }}</a>
+    @endif
 
     @include('partials.locale-switcher', [
         'routeName' => $routeName ?? 'teacher.index.locale',
@@ -46,7 +48,11 @@
     @auth
         <div class="student-topbar-menu" data-topbar-menu>
             <button class="student-avatar" type="button" aria-expanded="false" data-topbar-menu-toggle>
-                {{ strtoupper(Str::substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                @if (filled(auth()->user()->profile_photo_path ?? null))
+                    <img src="{{ Storage::disk('public')->url(auth()->user()->profile_photo_path) }}" alt="{{ auth()->user()->name }}" class="student-avatar__image">
+                @else
+                    {{ strtoupper(Str::substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                @endif
             </button>
 
             <div class="student-topbar-menu__dropdown student-topbar-menu__dropdown--profile" data-topbar-menu-dropdown>

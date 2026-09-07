@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -23,7 +24,7 @@ class DatabaseSeeder extends Seeder
             'phone' => '0600000000',
             'role' => 'student',
             'preferred_locale' => 'ar',
-            'password' => 'Test12345',
+            'password' => Hash::make('Test12345'),
         ]);
         $testUser->forceFill(['email_verified_at' => now()])->save();
 
@@ -35,7 +36,7 @@ class DatabaseSeeder extends Seeder
             'phone' => '212645532991',
             'role' => 'admin',
             'preferred_locale' => 'ar',
-            'password' => 'Admin12345!',
+            'password' => Hash::make('Admin12345!'),
         ]);
         $adminUser->forceFill(['email_verified_at' => now()])->save();
 
@@ -47,7 +48,7 @@ class DatabaseSeeder extends Seeder
             'phone' => '0601234567',
             'role' => 'teacher',
             'preferred_locale' => 'fr',
-            'password' => 'Teacher12345!',
+            'password' => Hash::make('Teacher12345!'),
         ]);
         $teacherUser->forceFill(['email_verified_at' => now()])->save();
     }

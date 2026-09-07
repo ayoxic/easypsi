@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -222,7 +223,7 @@ $studentHasPremiumAccess = static function (?User $user, TeacherLesson $lesson):
         return false;
     }
 
-    return blank($user->premium_level_key) || $user->premium_level_key === $lesson->level_key;
+    return blank($user->premium_level_key) || $user->hasActivePremiumForLevel($lesson->level_key);
 };
 
 $teacherCopy = static function (string $locale): array {
@@ -244,6 +245,10 @@ $teacherCopy = static function (string $locale): array {
             'course' => 'الدرس',
             'exercise' => 'التمرين',
             'teacher_page' => 'صفحة الأستاذ',
+            'no_videos' => 'لا توجد فيديوهات لهذا الأستاذ بعد',
+            'no_videos_text' => 'لم ينشر هذا الأستاذ أي فيديو بعد. جرب اختيارا آخر أو عد لاحقا.',
+            'no_videos_for_filter' => 'لا توجد فيديوهات لهذا الأستاذ في هذا الاختيار',
+            'reset_filters' => 'إعادة تعيين الاختيار',
         ],
         'en' => [
             'index_title' => 'Choose the teacher you want',
@@ -262,6 +267,10 @@ $teacherCopy = static function (string $locale): array {
             'course' => 'Course',
             'exercise' => 'Exercise',
             'teacher_page' => 'Teacher page',
+            'no_videos' => 'No videos from this teacher yet',
+            'no_videos_text' => 'This teacher has not published any video yet. Try another selection or come back later.',
+            'no_videos_for_filter' => 'No videos from this teacher for this selection',
+            'reset_filters' => 'Reset selection',
         ],
         default => [
             'index_title' => 'Choisissez le professeur que vous voulez',
@@ -280,9 +289,26 @@ $teacherCopy = static function (string $locale): array {
             'course' => 'Cours',
             'exercise' => 'Exercice',
             'teacher_page' => 'Page du professeur',
+            'no_videos' => 'Aucune vidéo de ce professeur pour le moment',
+            'no_videos_text' => "Ce professeur n'a pas encore publié de vidéo. Essayez une autre sélection ou revenez plus tard.",
+            'no_videos_for_filter' => 'Aucune vidéo faite par ce professeur pour cette sélection',
+            'reset_filters' => 'Réinitialiser la sélection',
         ],
     };
 };
+
+Route::post('/language', function (Request $request) use ($resolveLocale) {
+    $validated = $request->validate([
+        'locale' => ['required', 'string'],
+        'redirect_to' => ['nullable', 'url'],
+    ]);
+
+    $locale = $resolveLocale($validated['locale']);
+    $request->session()->put('easypsi_locale', $locale);
+    app()->setLocale($locale);
+
+    return redirect()->to($validated['redirect_to'] ?? url()->previous() ?? route('welcome.locale', ['locale' => $locale]));
+})->name('language.update');
 
 Route::redirect('/', '/fr');
 
@@ -467,7 +493,37 @@ Route::middleware('auth')->group(function () use (
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:50'],
+            'profile_photo' => ['nullable', 'image', 'max:5120'],
+            'profile_photo_cropped' => ['nullable', 'string'],
         ]);
+
+        if (filled($validated['profile_photo_cropped'] ?? null) && preg_match('/^data:image\/(\w+);base64,/', $validated['profile_photo_cropped'], $matches) === 1) {
+            $extension = strtolower($matches[1]);
+            $supportedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            $extension = in_array($extension, $supportedExtensions, true) ? $extension : 'png';
+
+            $imageData = base64_decode(substr($validated['profile_photo_cropped'], strpos($validated['profile_photo_cropped'], ',') + 1), true);
+
+            if ($imageData !== false) {
+                if (filled($user->profile_photo_path)) {
+                    Storage::disk('public')->delete($user->profile_photo_path);
+                }
+
+                $path = 'profile-photos/'.Str::uuid().'.'.$extension;
+                Storage::disk('public')->put($path, $imageData);
+                $validated['profile_photo_path'] = $path;
+            }
+        } elseif ($request->hasFile('profile_photo')) {
+            if (filled($user->profile_photo_path)) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            $validated['profile_photo_path'] = $request->file('profile_photo')->store('profile-photos', 'public');
+        }
+
+        unset($validated['profile_photo']);
+        unset($validated['profile_photo_cropped']);
+
         $user->fill($validated);
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
@@ -494,7 +550,7 @@ Route::middleware('auth')->group(function () use (
         $matrix = $levelMatrix($locale);
         $subjectOptions = $teacherSubjectOptions($locale);
 
-        $query = TeacherLesson::query()->with('teacher')->where('locale', $locale);
+        $query = TeacherLesson::query()->with('teacher');
 
         $selectedLevel = (string) $request->query('level');
         $selectedTrack = (string) $request->query('track');
@@ -502,10 +558,7 @@ Route::middleware('auth')->group(function () use (
         $teacherName = trim((string) $request->query('teacher'));
 
         if ($selectedLevel !== '') {
-            $query->where('level_key', $selectedLevel);
-        }
-        if ($selectedTrack !== '') {
-            $query->where('level_key', $selectedLevel !== '' ? $selectedLevel.'::'.$selectedTrack : $selectedTrack);
+            $query->forAudience($selectedLevel.($selectedTrack !== '' ? '::'.$selectedTrack : ''));
         }
         if ($selectedSubject !== '') {
             $query->where('subject_key', $selectedSubject);
@@ -515,13 +568,9 @@ Route::middleware('auth')->group(function () use (
         }
 
         $teachers = User::where('role', 'teacher')
-            ->whereHas('teacherLessons', function ($q) use ($locale, $selectedLevel, $selectedTrack, $selectedSubject, $teacherName) {
-                $q->where('locale', $locale);
+            ->whereHas('teacherLessons', function ($q) use ($selectedLevel, $selectedTrack, $selectedSubject, $teacherName) {
                 if ($selectedLevel !== '') {
-                    $q->where('level_key', 'like', $selectedLevel.'%');
-                }
-                if ($selectedTrack !== '' && $selectedLevel !== '') {
-                    $q->where('level_key', $selectedLevel.'::'.$selectedTrack);
+                    $q->forAudience($selectedLevel.($selectedTrack !== '' ? '::'.$selectedTrack : ''));
                 }
                 if ($selectedSubject !== '') {
                     $q->where('subject_key', $selectedSubject);
@@ -530,13 +579,12 @@ Route::middleware('auth')->group(function () use (
                     $q->whereHas('teacher', fn ($teacherQuery) => $teacherQuery->where('name', 'like', '%'.$teacherName.'%'));
                 }
             })
-            ->with(['teacherLessons' => function ($q) use ($locale) {
-                $q->where('locale', $locale)
-                    ->orderBy('level_label')
+            ->with(['teacherLessons' => function ($q) {
+                $q->orderBy('level_label')
                     ->orderBy('subject_label')
                     ->orderBy('title');
             }])
-            ->withCount(['teacherLessons as lessons_count' => fn ($q) => $q->where('locale', $locale)])
+            ->withCount(['teacherLessons as lessons_count'])
             ->get();
 
         $data = array_merge($data, [
@@ -559,25 +607,101 @@ Route::middleware('auth')->group(function () use (
 
         $locale = $resolveLocale($locale);
         $copy = $teacherCopy($locale);
-        $lessons = TeacherLesson::with(['assets', 'teacher'])
+        $allLessons = TeacherLesson::with(['assets', 'teacher'])
             ->where('teacher_id', $teacher->id)
-            ->where('locale', $locale)
+            ->orderByRaw('sort_order = 0')
+            ->orderBy('sort_order')
             ->orderBy('level_label')
-            ->orderBy('title')
-            ->get();
+            ->orderBy('created_at')
+            ->get()
+            ->filter(function (TeacherLesson $lesson) use ($youtubeEmbedUrl): bool {
+                $courseAsset = $lesson->assets->firstWhere('part', 'course');
 
-        abort_if($lessons->isEmpty(), 404);
+                return $courseAsset && filled($youtubeEmbedUrl($courseAsset->youtube_url ?? null));
+            })
+            ->values();
 
-        $lesson = filled($request->query('lesson'))
-            ? $lessons->firstWhere('slug', $request->query('lesson'))
-            : $lessons->first();
+        $requestedSubject = (string) $request->query('subject', '');
+        $requestedLevel = (string) $request->query('level', '');
+        $requestedLessonSlug = (string) $request->query('lesson', '');
 
-        $lesson ??= $lessons->first();
+        if ($allLessons->isEmpty()) {
+            $data = array_merge($baseViewData($locale), [
+                'title' => 'EasyPsi | '.$teacher->name,
+                'teacherPageCopy' => $copy,
+                'teacherUser' => $teacher,
+                'allLessons' => $allLessons,
+                'groupedLessons' => collect(),
+                'selectedSubject' => $requestedSubject,
+                'selectedLevel' => $requestedLevel,
+                'activeLesson' => null,
+                'activePart' => (string) $request->query('part', 'course'),
+                'activeAsset' => new TeacherLessonAsset(['part' => 'course', 'access_level' => 'free']),
+                'embedUrl' => null,
+                'locked' => false,
+                'isEmptyTeacher' => true,
+                'isEmptyFilter' => false,
+            ]);
+
+            return view('teacher-course', $data);
+        }
+
+        $requestedLesson = $requestedLessonSlug !== ''
+            ? $allLessons->firstWhere('slug', $requestedLessonSlug)
+            : null;
+
+        $fallbackLesson = $requestedLesson ?? $allLessons->first();
+
+        $selectedSubject = $requestedSubject !== '' ? $requestedSubject : ($fallbackLesson->subject_key ?? '');
+        if ($requestedLevel !== '' && $requestedSubject === '') {
+            $selectedSubject = '';
+        }
+        $selectedLevel = $requestedLevel !== '' ? $requestedLevel : ($fallbackLesson->level_key ?? '');
+        if (str_contains($selectedLevel, '|')) {
+            $selectedLevel = explode('|', $selectedLevel, 2)[0];
+        }
+
+        $lessons = $allLessons
+            ->filter(fn ($item) => $selectedSubject !== '')
+            ->when($selectedSubject !== '', fn ($collection) => $collection->where('subject_key', $selectedSubject))
+            ->when($selectedLevel !== '', fn ($collection) => $collection->filter(fn ($item) => \App\Support\LevelAudience::matches($item->level_key, $selectedLevel)))
+            ->values();
+
+        if ($lessons->isEmpty()) {
+            $data = array_merge($baseViewData($locale), [
+                'title' => 'EasyPsi | '.$teacher->name,
+                'teacherPageCopy' => $copy,
+                'teacherUser' => $teacher,
+                'allLessons' => $allLessons,
+                'groupedLessons' => collect(),
+                'selectedSubject' => $selectedSubject,
+                'selectedLevel' => $selectedLevel,
+                'activeLesson' => null,
+                'activePart' => (string) $request->query('part', 'course'),
+                'activeAsset' => new TeacherLessonAsset(['part' => 'course', 'access_level' => 'free']),
+                'embedUrl' => null,
+                'locked' => false,
+                'isEmptyTeacher' => false,
+                'isEmptyFilter' => true,
+            ]);
+
+            return view('teacher-course', $data);
+        }
+
+        $lesson = $lessons->firstWhere('slug', $requestedLessonSlug) ?? $lessons->first();
         $part = (string) $request->query('part', 'course');
         $asset = $lesson->assets->firstWhere('part', $part) ?? $lesson->assets->first() ?? new TeacherLessonAsset([
             'part' => 'course',
             'access_level' => 'free',
         ]);
+
+        if (($asset->part ?? '') !== 'quiz' && blank($youtubeEmbedUrl($asset->youtube_url ?? null))) {
+            $part = 'course';
+            $asset = $lesson->assets->firstWhere('part', 'course') ?? new TeacherLessonAsset([
+                'part' => 'course',
+                'access_level' => 'free',
+            ]);
+        }
 
         $locked = ($asset->access_level ?? 'free') === 'premium' && ! $studentHasPremiumAccess($request->user(), $lesson);
 
@@ -587,27 +711,85 @@ Route::middleware('auth')->group(function () use (
             'title' => 'EasyPsi | '.$teacher->name,
             'teacherPageCopy' => $copy,
             'teacherUser' => $teacher,
+            'allLessons' => $allLessons,
             'groupedLessons' => $groupedLessons,
+            'selectedSubject' => $selectedSubject,
+            'selectedLevel' => $selectedLevel,
             'activeLesson' => $lesson,
             'activePart' => $part,
             'activeAsset' => $asset,
             'embedUrl' => $youtubeEmbedUrl($asset->youtube_url ?? null),
             'locked' => $locked,
+            'isEmptyTeacher' => false,
+            'isEmptyFilter' => false,
         ]);
 
         return view('teacher-course', $data);
     })->name('teacher.course.locale');
 
+    Route::post('/{locale}/course-chat', function (Request $request, string $locale) use ($resolveLocale) {
+        $locale = $resolveLocale($locale);
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:500'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'teacher' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:6000'],
+            'support' => ['nullable', 'string', 'max:6000'],
+            'quiz' => ['nullable', 'array', 'max:50'],
+            'quiz.*' => ['string', 'max:500'],
+        ]);
+
+        $apiKey = env('GEMINI_API_KEY');
+        if (! filled($apiKey)) {
+            return response()->json(['error' => 'AI not configured'], 503);
+        }
+
+        $langName = match ($locale) {
+            'ar' => 'Arabic',
+            'en' => 'English',
+            default => 'French',
+        };
+        $quizText = collect($validated['quiz'] ?? [])->take(10)->implode("\r\n- ");
+        $system = "You are the lesson assistant for an online course platform. Lesson: ".($validated['title'] ?? '')." by ".($validated['teacher'] ?? '').". First use the lesson content below to answer, in {$langName}, in 2-4 short sentences. If the question goes beyond that content, answer from your own knowledge while staying consistent with the lesson topic and the student's level. Never invent quiz questions or premium details. Write all mathematics in plain readable text, never LaTeX: no dollar signs, no backslash commands. Write units like tr/min and rad/s, and formulas like ω = 2π x N / 60.\r\n\r\nDESCRIPTION:\r\n".($validated['description'] ?? '')."\r\n\r\nSUPPORT NOTES:\r\n".($validated['support'] ?? '')."\r\n\r\nQUIZ QUESTIONS:\r\n- ".$quizText;
+
+        try {
+            $response = Http::timeout(20)->withHeaders(['x-goog-api-key' => $apiKey, 'Content-Type' => 'application/json'])->post(
+                'https://generativelanguage.googleapis.com/v1beta/models/'.env('GEMINI_MODEL', 'gemini-3.6-flash').':generateContent',
+                [
+                    'systemInstruction' => ['parts' => [['text' => $system]]],
+                    'contents' => [['parts' => [['text' => $validated['message']]]]],
+                    'generationConfig' => ['maxOutputTokens' => 1024, 'temperature' => 0.4],
+                ]
+            );
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'AI unreachable'], 502);
+        }
+
+        if (! $response->successful()) {
+            return response()->json(['error' => 'AI error'], 502);
+        }
+
+        $reply = data_get($response->json(), 'candidates.0.content.parts.0.text');
+        if (! filled($reply)) {
+            return response()->json(['error' => 'Empty reply'], 502);
+        }
+
+        return response()->json(['reply' => trim($reply)]);
+    })->middleware('throttle:15,1')->name('course.chat');
+
     Route::get('/{locale}/teacher-space', function (Request $request, string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions, $levelMatrix, $teacherCopy) {
         abort_unless(in_array($request->user()->role, ['teacher', 'admin'], true), 403);
-        $locale = $resolveLocale($locale);
+    $locale = $resolveLocale($locale);
         $matrix = $levelMatrix($locale);
         $subjectOptions = $teacherSubjectOptions($locale);
         $teacher = $request->user()->role === 'teacher' ? $request->user() : User::where('role', 'teacher')->first();
 
         $lessons = TeacherLesson::with('assets')
             ->where('teacher_id', $teacher?->id)
-            ->orderByDesc('created_at')
+            ->whereHas('assets')
+            ->orderByRaw('sort_order = 0')
+            ->orderBy('sort_order')
+            ->orderBy('created_at')
             ->get();
 
         return view('teacher-dashboard', array_merge($baseViewData($locale), [
@@ -630,7 +812,8 @@ Route::middleware('auth')->group(function () use (
             'title' => ['nullable', 'string', 'max:255', 'required_without:existing_lesson'],
             'existing_lesson' => ['nullable', 'integer'],
             'level' => ['required', 'string'],
-            'track' => ['nullable', 'string'],
+            'track' => ['nullable', 'array'],
+            'track.*' => ['nullable', 'string'],
             'subject' => ['required', 'string'],
             'part' => ['required', 'in:course,exercise,quiz'],
             'access_level' => ['required', 'in:free,premium'],
@@ -639,13 +822,29 @@ Route::middleware('auth')->group(function () use (
             'support_body' => ['nullable', 'string'],
             'quiz_body' => ['nullable', 'string'],
             'support_file' => ['nullable', 'file', 'max:10240'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
         ]);
 
         $levelKey = $validated['level'];
+        abort_unless(isset($matrix[$levelKey]), 422, 'Niveau invalide.');
+        $submittedTracks = array_values(array_unique(array_filter($validated['track'] ?? [])));
+        $availableTracks = $matrix[$levelKey]['tracks'];
+        if (($availableTracks && ! $submittedTracks) || array_diff($submittedTracks, array_keys($availableTracks))) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['track' => 'Choisissez au moins une filiere valide.']);
+        }
+        $validSubject = isset($subjectOptions[$validated['subject']]);
+        foreach ($submittedTracks as $track) {
+            $validSubject = $validSubject && in_array($validated['subject'], $availableTracks[$track]['subjects'], true);
+        }
+        if (! $validSubject) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['subject' => 'Choisissez une matiere commune aux filieres selectionnees.']);
+        }
         $levelLabel = $matrix[$validated['level']]['label'] ?? $validated['level'];
-        if (filled($validated['track'] ?? null) && isset($matrix[$validated['level']]['tracks'][$validated['track']])) {
-            $levelKey = $validated['level'].'::'.$validated['track'];
-            $levelLabel .= ' / '.$matrix[$validated['level']]['tracks'][$validated['track']]['label'];
+        $selectedTracks = array_values(array_filter((array) ($validated['track'] ?? []), fn ($trackKey) => filled($trackKey) && isset($matrix[$validated['level']]['tracks'][$trackKey])));
+        if ($selectedTracks !== []) {
+            $levelKey = $validated['level'].'::'.implode('|', $selectedTracks);
+            $trackLabels = array_map(fn ($trackKey) => $matrix[$validated['level']]['tracks'][$trackKey]['label'], $selectedTracks);
+            $levelLabel .= ' / '.implode(' + ', $trackLabels);
         }
 
         $teacherId = $request->user()->role === 'teacher' ? $request->user()->id : User::where('role', 'teacher')->value('id');
@@ -658,6 +857,14 @@ Route::middleware('auth')->group(function () use (
         }
 
         if (! $lesson) {
+            $newSortOrder = $validated['sort_order'] ?? null;
+            if ($newSortOrder === null || $newSortOrder === '') {
+                $newSortOrder = (int) TeacherLesson::where('teacher_id', $teacherId)
+                    ->where('locale', $locale)
+                    ->where('level_key', $levelKey)
+                    ->where('subject_key', $validated['subject'])
+                    ->max('sort_order') + 1;
+            }
             $lesson = TeacherLesson::create([
                 'teacher_id' => $teacherId,
                 'locale' => $locale,
@@ -667,6 +874,7 @@ Route::middleware('auth')->group(function () use (
                 'level_key' => $levelKey,
                 'level_label' => $levelLabel,
                 'title' => $validated['title'],
+                'sort_order' => (int) $newSortOrder,
             ]);
         } else {
             $lesson->update([
@@ -676,6 +884,7 @@ Route::middleware('auth')->group(function () use (
                 'level_key' => $levelKey,
                 'level_label' => $levelLabel,
                 'title' => filled($validated['title'] ?? null) ? $validated['title'] : $lesson->title,
+                'sort_order' => array_key_exists('sort_order', $validated) && $validated['sort_order'] !== null ? (int) $validated['sort_order'] : ($lesson->sort_order ?? 0),
             ]);
         }
 
@@ -764,7 +973,12 @@ Route::middleware('auth')->group(function () use (
         if (filled($asset->support_file_path ?? null)) {
             Storage::disk('public')->delete($asset->support_file_path);
         }
+        $lesson = $asset->lesson;
         $asset->delete();
+
+        if ($lesson && ! $lesson->assets()->exists()) {
+            $lesson->delete();
+        }
 
         return redirect()->route('teacher.space.locale', ['locale' => $locale])->with('status', 'Contenu supprimé.');
     })->name('teacher.content.delete');
@@ -783,7 +997,8 @@ Route::middleware('auth')->group(function () use (
         }
 
         $levelOptions = TeacherLesson::query()->select('level_key', 'level_label')->distinct()->get()
-            ->map(fn ($item) => ['key' => $item->level_key, 'label' => $item->level_label])
+            ->flatMap(fn ($item) => \App\Support\LevelAudience::choices($item->level_key, $item->level_label))
+            ->map(fn ($label, $key) => ['key' => $key, 'label' => $label])
             ->values()
             ->all();
 
@@ -801,7 +1016,7 @@ Route::middleware('auth')->group(function () use (
 
     Route::post('/{locale}/admin/users/{user}/subscription', function (Request $request, string $locale, User $user) use ($resolveLocale) {
         abort_unless($request->user()->role === 'admin', 403);
-        $locale = $resolveLocale($locale);
+    $locale = $resolveLocale($locale);
         $validated = $request->validate([
             'subscription_tier' => ['required', 'in:free,premium'],
             'premium_duration' => ['nullable', 'in:1_month,6_months,1_year'],

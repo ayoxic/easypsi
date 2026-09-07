@@ -8,6 +8,10 @@
             'subtitle' => 'Mettez à jour vos informations et votre mot de passe.',
             'info_title' => 'Informations personnelles',
             'info_text' => 'Modifiez votre nom, email et téléphone.',
+            'photo' => 'Photo de profil',
+            'photo_text' => 'Choisissez une image, déplacez-la dans le cadre et ajustez le zoom avant d’enregistrer.',
+            'zoom' => 'Zoom',
+            'crop_note' => 'La photo sera enregistrée en carré.',
             'security_title' => 'Sécurité',
             'security_text' => 'Changez votre mot de passe pour protéger votre compte.',
             'name' => 'Nom',
@@ -25,6 +29,10 @@
             'subtitle' => 'قم بتحديث معلوماتك وكلمة المرور.',
             'info_title' => 'المعلومات الشخصية',
             'info_text' => 'عدل الاسم والبريد الالكتروني والهاتف.',
+            'photo' => 'الصورة الشخصية',
+            'photo_text' => 'اختر صورة ثم حركها داخل الإطار وعدل التكبير قبل الحفظ.',
+            'zoom' => 'التكبير',
+            'crop_note' => 'سيتم حفظ الصورة بشكل مربع.',
             'security_title' => 'الامان',
             'security_text' => 'غير كلمة المرور لحماية حسابك.',
             'name' => 'الاسم',
@@ -42,6 +50,10 @@
             'subtitle' => 'Update your information and password.',
             'info_title' => 'Personal information',
             'info_text' => 'Edit your name, email, and phone number.',
+            'photo' => 'Profile photo',
+            'photo_text' => 'Choose an image, move it inside the frame, and adjust the zoom before saving.',
+            'zoom' => 'Zoom',
+            'crop_note' => 'The photo will be saved as a square.',
             'security_title' => 'Security',
             'security_text' => 'Change your password to keep your account safe.',
             'name' => 'Name',
@@ -61,7 +73,7 @@
     <main class="student-shell">
         @include('partials.student-topbar', [
             'topbarTitle' => $profileCopy['title'],
-            'routeName' => 'student.profile.locale',
+            'routeName' => 'teacher.index.locale',
             'whatsappBase' => $whatsappBase,
         ])
 
@@ -80,9 +92,36 @@
                         <div class="student-form-success">{{ $profileCopy['saved_profile'] }}</div>
                     @endif
 
-                    <form method="POST" action="{{ route('profile.update') }}" class="student-form-grid">
+                    <form method="POST" action="{{ route('profile.update') }}" class="student-form-grid" enctype="multipart/form-data" data-profile-photo-form>
                         @csrf
                         @method('patch')
+
+                        <div class="profile-photo-field">
+                            <div class="profile-photo-field__preview" data-profile-photo-preview>
+                                @if (filled($user->profile_photo_path))
+                                    <img src="{{ Storage::disk('public')->url($user->profile_photo_path) }}" alt="{{ $user->name }}" class="profile-photo-field__image" data-profile-photo-image>
+                                @else
+                                    <span class="profile-photo-field__initial" data-profile-photo-initial>{{ strtoupper(mb_substr($user->name, 0, 1)) }}</span>
+                                @endif
+                            </div>
+
+                            <div class="profile-photo-field__controls">
+                                <p class="profile-photo-field__text">{{ $profileCopy['photo_text'] }}</p>
+                                <label class="student-form-field profile-photo-field__input">
+                                    <span>{{ $profileCopy['photo'] }}</span>
+                                    <input type="file" name="profile_photo" accept="image/png,image/jpeg,image/jpg,image/webp" data-profile-photo-input>
+                                    @error('profile_photo')
+                                        <small>{{ $message }}</small>
+                                    @enderror
+                                </label>
+                                <label class="student-form-field profile-photo-field__zoom">
+                                    <span>{{ $profileCopy['zoom'] }}</span>
+                                    <input type="range" min="1" max="3" step="0.01" value="1" data-profile-photo-zoom disabled>
+                                </label>
+                                <p class="profile-photo-field__hint">{{ $profileCopy['crop_note'] }}</p>
+                                <input type="hidden" name="profile_photo_cropped" value="" data-profile-photo-cropped>
+                            </div>
+                        </div>
 
                         <label class="student-form-field">
                             <span>{{ $profileCopy['name'] }}</span>

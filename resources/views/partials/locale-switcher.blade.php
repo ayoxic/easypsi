@@ -1,8 +1,3 @@
-@php
-    $routeParameters = request()->route()?->parameters() ?? [];
-    $queryParameters = request()->query();
-@endphp
-
 @if (($localeMenuStyle ?? null) === 'dropdown')
     <nav class="locale-switcher locale-switcher--menu" aria-label="Language switcher">
         <div class="student-topbar-menu student-topbar-menu--languages" data-topbar-menu>
@@ -24,7 +19,7 @@
                     @endphp
                     <a
                         class="student-topbar-menu__option{{ $locale === $switchLocale ? ' is-active' : '' }}"
-                        href="{{ route($routeName, array_merge($routeParameters, ['locale' => $switchLocale], array_merge($queryParameters, ! empty($localeQueryOverrides ?? []) ? collect($localeQueryOverrides)->mapWithKeys(fn ($value, $key) => [$key => $value === '__CURRENT_SWITCH_LOCALE__' ? $switchLocale : $value])->all() : []))) }}"
+                        href="{{ route($routeName, array_merge(request()->route()?->parameters() ?? [], ['locale' => $switchLocale], request()->query())) }}"
                     >
                         {{ $localeLabel }}
                     </a>
@@ -37,7 +32,7 @@
         @foreach ($availableLocales as $switchLocale => $switchCopy)
             <a
                 class="locale-pill {{ $locale === $switchLocale ? 'is-active' : '' }}"
-                href="{{ route($routeName, array_merge($routeParameters, ['locale' => $switchLocale], array_merge($queryParameters, ! empty($localeQueryOverrides ?? []) ? collect($localeQueryOverrides)->mapWithKeys(fn ($value, $key) => [$key => $value === '__CURRENT_SWITCH_LOCALE__' ? $switchLocale : $value])->all() : []))) }}"
+                href="{{ route($routeName, array_merge(request()->route()?->parameters() ?? [], ['locale' => $switchLocale], request()->query())) }}"
             >
                 {{ $switchCopy['short'] }}
             </a>

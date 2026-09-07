@@ -54,6 +54,17 @@
         });
     });
 
+    $paymentBackUrl = (string) request()->query('back', '');
+    $appBaseUrl = url('/');
+
+    if ($paymentBackUrl === '') {
+        $paymentBackUrl = url()->previous();
+    }
+
+    if ($paymentBackUrl === url()->current() || ! str_starts_with($paymentBackUrl, $appBaseUrl)) {
+        $paymentBackUrl = route('teacher.index.locale', ['locale' => $locale]);
+    }
+
     if ($locale === 'ar') {
         $arabicDurations = [
             'tronc_commun' => ['ولوج 30 يوما', 'ولوج 180 يوما', 'ولوج 365 يوما'],
@@ -92,6 +103,7 @@
         @include('partials.student-topbar', [
             'topbarTitle' => $paymentCopy['title'],
             'routeName' => 'payment.locale',
+            'brandHref' => $paymentBackUrl,
             'whatsappBase' => $whatsappBase,
         ])
 

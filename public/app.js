@@ -898,6 +898,7 @@ teacherContentForms.forEach((form) => {
   const subjectSelect = form.querySelector("[data-teacher-subject-select]");
   const levelKeyInput = form.querySelector("[data-teacher-level-key]");
   const lessonSelect = form.querySelector("[data-teacher-lesson-select]");
+  const sortInput = form.querySelector("[data-teacher-sort-input]");
   const partSelect = form.querySelector("[data-teacher-part-select]");
   const accessSelect = form.querySelector("[data-teacher-access-select]");
   const deleteLessonInput = document.querySelector("[data-teacher-delete-lesson]");
@@ -939,31 +940,77 @@ teacherContentForms.forEach((form) => {
     defaultOption.textContent = defaultLabel;
     select.append(defaultOption);
 
+    const selectedValues = Array.isArray(selectedValue) ? selectedValue : [selectedValue].filter(Boolean);
     items.forEach((item) => {
       const option = document.createElement("option");
       option.value = item.key;
       option.textContent = item.label;
-      option.selected = selectedValue === item.key;
+      option.selected = selectedValues.includes(item.key);
       select.append(option);
     });
   };
 
   const syncProgramTrackSubject = ({ preserveTrack = true, preserveSubject = true } = {}) => {
     const activeProgram = programOptions.find((item) => item.key === programSelect.value) || null;
-    const currentTrack = preserveTrack ? trackSelect.value : "";
+    const currentTrack = preserveTrack ? Array.from(trackSelect.selectedOptions).map((option) => option.value).filter(Boolean) : [];
     const currentSubject = preserveSubject ? subjectSelect.value : "";
     const tracks = activeProgram ? activeProgram.tracks || [] : [];
+    const hasTracks = tracks.length > 0;
 
-    fillSelect(trackSelect, tracks, chooseTrackLabel, currentTrack);
-    trackSelect.disabled = !activeProgram;
+    fillSelect(trackSelect, tracks, chooseTrackLabel, hasTracks ? currentTrack : "");
+    trackSelect.disabled = !activeProgram || !hasTracks;
+    const trackOptions = form.querySelector('[data-teacher-track-options]');
+    if (trackOptions) {
+      trackOptions.replaceChildren();
+      Array.from(trackSelect.options).filter((option) => option.value).forEach((option) => {
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = option.selected;
+        checkbox.disabled = trackSelect.disabled;
+        checkbox.addEventListener('change', () => {
+          option.selected = checkbox.checked;
+          trackSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        label.append(checkbox, document.createTextNode(option.textContent));
+        trackOptions.append(label);
+      });
+    }
+    trackSelect.closest("label")?.classList.toggle("is-disabled", trackSelect.disabled);
+    const trackHint = form.querySelector("[data-teacher-track-hint]");
+    if (trackHint) {
+      trackHint.hidden = !(activeProgram && !hasTracks);
+    }
+    if (!hasTracks) {
+      Array.from(trackSelect.options).forEach((option) => {
+        option.selected = false;
+      });
+    }
 
-    const activeTrack = tracks.find((item) => item.key === trackSelect.value) || null;
-    const subjects = activeTrack ? activeTrack.subjects || [] : (activeProgram ? activeProgram.subjects || [] : []);
+    const selectedTracks = hasTracks
+      ? Array.from(trackSelect.selectedOptions).map((option) => option.value).filter(Boolean)
+      : [];
+    const activeTrack = selectedTracks.length > 0
+      ? tracks.find((item) => item.key === selectedTracks[0]) || null
+      : null;
+    const subjects = selectedTracks.length > 0
+      ? tracks.find((item) => item.key === selectedTracks[0]).subjects.filter((subject) => selectedTracks.every((trackKey) => tracks.find((item) => item.key === trackKey).subjects.some((item) => item.key === subject.key)))
+      : (activeProgram ? activeProgram.subjects || [] : []);
 
+    // Keep the current subject selected when it is still available after a level/track change.
     fillSelect(subjectSelect, subjects, chooseSubjectLabel, currentSubject);
-    subjectSelect.disabled = !activeTrack;
+    if (currentSubject && Array.from(subjectSelect.options).some((option) => option.value === currentSubject)) {
+      subjectSelect.value = currentSubject;
+    }
+    subjectSelect.disabled = subjects.length === 0;
 
-    levelKeyInput.value = activeProgram && activeTrack ? `${activeProgram.key}::${activeTrack.key}` : "";
+    if (activeProgram && activeTrack) {
+      levelKeyInput.value = `${activeProgram.key}::${selectedTracks.join("|")}`;
+    } else if (activeProgram) {
+      levelKeyInput.value = activeProgram.key;
+    } else {
+      levelKeyInput.value = "";
+    }
   };
 
   const getQuestionCards = () => Array.from(quizQuestionList.querySelectorAll("[data-teacher-question-card]"));
@@ -1351,11 +1398,11 @@ teacherContentForms.forEach((form) => {
   };
 
   programSelect.addEventListener("change", () => {
-    syncSelectionState({ preserveTrack: true, preserveSubject: false });
+    syncSelectionState({ preserveTrack: true, preserveSubject: true });
   });
 
   trackSelect.addEventListener("change", () => {
-    syncSelectionState({ preserveTrack: true, preserveSubject: false });
+    syncSelectionState({ preserveTrack: true, preserveSubject: true });
   });
 
   localeSelect.addEventListener("change", () => {
@@ -1368,6 +1415,9 @@ teacherContentForms.forEach((form) => {
 
   lessonSelect.addEventListener("change", () => {
     syncDeleteState();
+    if (sortInput) {
+      sortInput.value = lessonSelect.selectedOptions[0]?.getAttribute("data-sort-order") || "";
+    }
     isPrefilling = true;
     fillAssetState();
     isPrefilling = false;
@@ -1538,4 +1588,483 @@ teacherSpaceForms.forEach((form) => {
 
   partSelect.addEventListener("change", syncTeacherSpacePart);
   syncTeacherSpacePart();
+});
+
+const teacherDeletePanels = document.querySelectorAll("[data-teacher-delete-panel]");
+
+teacherDeletePanels.forEach((panel) => {
+  const programOptions = JSON.parse(panel.getAttribute("data-program-options") || "[]");
+  const localeSelect = panel.querySelector("[data-teacher-delete-locale]");
+  const levelSelect = panel.querySelector("[data-teacher-delete-level]");
+  const trackSelect = panel.querySelector("[data-teacher-delete-track]");
+  const subjectSelect = panel.querySelector("[data-teacher-delete-subject]");
+  const typeSelect = panel.querySelector("[data-teacher-delete-type]");
+  const emptyState = panel.querySelector("[data-teacher-delete-empty]");
+  const resultsSection = document.querySelector("[data-teacher-delete-results]");
+  const cards = Array.from(document.querySelectorAll("[data-teacher-delete-card]"));
+
+  if (!localeSelect || !levelSelect || !trackSelect || !subjectSelect || !typeSelect || cards.length === 0) {
+    return;
+  }
+
+  const trackDefaultLabel = trackSelect.querySelector("option")?.textContent || "";
+
+  const fillTrackOptions = () => {
+    const currentLevel = levelSelect.value;
+      const currentTrack = trackSelect.value;
+    const activeProgram = programOptions.find((item) => item.key === currentLevel) || null;
+    const tracks = activeProgram ? activeProgram.tracks || [] : [];
+
+    trackSelect.innerHTML = "";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = trackDefaultLabel;
+    trackSelect.append(defaultOption);
+
+    tracks.forEach((track) => {
+      const option = document.createElement("option");
+      option.value = track.key;
+      option.textContent = track.label;
+      option.selected = currentTrack === track.key;
+      trackSelect.append(option);
+    });
+
+    const hasSelectedTrack = Array.from(trackSelect.options).some((option) => option.value === currentTrack);
+    trackSelect.value = hasSelectedTrack ? currentTrack : "";
+    trackSelect.disabled = !currentLevel || tracks.length === 0;
+  };
+
+  const applyFilters = () => {
+    const currentLocale = localeSelect.value;
+    const currentLevel = levelSelect.value;
+    const currentTrack = trackSelect.value;
+    const currentSubject = subjectSelect.value;
+    const currentType = typeSelect.value;
+    const hasActiveFilters = Boolean(currentLocale || currentLevel || currentTrack || currentSubject || currentType);
+    let visibleCards = 0;
+    let hasShownFirstMatch = false;
+
+    cards.forEach((card) => {
+      if (!hasActiveFilters) {
+        card.hidden = true;
+        Array.from(card.querySelectorAll("[data-teacher-delete-asset]")).forEach((row) => {
+          row.hidden = true;
+        });
+        return;
+      }
+
+      const localeMatches = !currentLocale || card.getAttribute("data-locale") === currentLocale;
+      const levelMatches = !currentLevel || card.getAttribute("data-level") === currentLevel;
+      const cardTrack = card.getAttribute("data-track") || "";
+      const trackMatches = !currentTrack || cardTrack.split("|").includes(currentTrack);
+      const subjectMatches = !currentSubject || card.getAttribute("data-subject") === currentSubject;
+      const assetRows = Array.from(card.querySelectorAll("[data-teacher-delete-asset]"));
+
+      let hasVisibleAsset = false;
+
+      assetRows.forEach((row) => {
+        const typeMatches = !currentType || row.getAttribute("data-type") === currentType;
+        const rowMatches = localeMatches && levelMatches && trackMatches && subjectMatches && typeMatches;
+        const shouldShowRow = rowMatches && !hasShownFirstMatch;
+        row.hidden = !shouldShowRow;
+        if (shouldShowRow) {
+          hasVisibleAsset = true;
+          hasShownFirstMatch = true;
+        }
+      });
+
+      card.hidden = !hasVisibleAsset;
+      if (hasVisibleAsset) {
+        visibleCards += 1;
+      }
+    });
+
+    if (resultsSection) {
+      resultsSection.hidden = !hasActiveFilters || visibleCards === 0;
+    }
+
+    if (emptyState) {
+      emptyState.hidden = true;
+    }
+  };
+
+  levelSelect.addEventListener("change", () => {
+    fillTrackOptions();
+    applyFilters();
+  });
+
+  trackSelect.addEventListener("change", applyFilters);
+  localeSelect.addEventListener("change", applyFilters);
+  subjectSelect.addEventListener("change", applyFilters);
+  typeSelect.addEventListener("change", applyFilters);
+
+  fillTrackOptions();
+  applyFilters();
+});
+
+const profilePhotoForms = document.querySelectorAll("[data-profile-photo-form]");
+
+profilePhotoForms.forEach((form) => {
+  const fileInput = form.querySelector("[data-profile-photo-input]");
+  const preview = form.querySelector("[data-profile-photo-preview]");
+  const existingImage = form.querySelector("[data-profile-photo-image]");
+  const initial = form.querySelector("[data-profile-photo-initial]");
+  const zoomInput = form.querySelector("[data-profile-photo-zoom]");
+  const croppedInput = form.querySelector("[data-profile-photo-cropped]");
+
+  if (!fileInput || !preview || !zoomInput || !croppedInput) {
+    return;
+  }
+
+  let activeImage = existingImage || null;
+  let sourceUrl = "";
+  let naturalWidth = 0;
+  let naturalHeight = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+  let zoom = Number(zoomInput.value) || 1;
+  let dragState = null;
+
+  const previewSize = () => preview.clientWidth || 132;
+
+  const clampOffsets = () => {
+    if (!activeImage || !naturalWidth || !naturalHeight) {
+      return;
+    }
+
+    const frame = previewSize();
+    const baseScale = Math.max(frame / naturalWidth, frame / naturalHeight);
+    const displayWidth = naturalWidth * baseScale * zoom;
+    const displayHeight = naturalHeight * baseScale * zoom;
+    const maxX = Math.max(0, (displayWidth - frame) / 2);
+    const maxY = Math.max(0, (displayHeight - frame) / 2);
+
+    offsetX = Math.min(maxX, Math.max(-maxX, offsetX));
+    offsetY = Math.min(maxY, Math.max(-maxY, offsetY));
+  };
+
+  const renderImage = () => {
+    if (!activeImage) {
+      return;
+    }
+
+    clampOffsets();
+    activeImage.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px)) scale(${zoom})`;
+  };
+
+  const ensureImageElement = () => {
+    if (activeImage) {
+      return activeImage;
+    }
+
+    const image = document.createElement("img");
+    image.className = "profile-photo-field__image";
+    image.setAttribute("data-profile-photo-image", "");
+    preview.append(image);
+    activeImage = image;
+    return image;
+  };
+
+  const loadImage = (url) => {
+    const image = ensureImageElement();
+    sourceUrl = url;
+    offsetX = 0;
+    offsetY = 0;
+    zoom = 1;
+    zoomInput.value = "1";
+    zoomInput.disabled = false;
+
+    image.onload = () => {
+      naturalWidth = image.naturalWidth || 0;
+      naturalHeight = image.naturalHeight || 0;
+      renderImage();
+    };
+
+    image.src = url;
+    if (initial) {
+      initial.hidden = true;
+    }
+  };
+
+  const exportCroppedImage = () => {
+    if (!activeImage || !sourceUrl || !naturalWidth || !naturalHeight) {
+      croppedInput.value = "";
+      return Promise.resolve();
+    }
+
+    const frame = previewSize();
+    const baseScale = Math.max(frame / naturalWidth, frame / naturalHeight);
+    const outputSize = 600;
+    const canvas = document.createElement("canvas");
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      croppedInput.value = "";
+      return Promise.resolve();
+    }
+
+    const scaledWidth = naturalWidth * baseScale * zoom;
+    const scaledHeight = naturalHeight * baseScale * zoom;
+    const drawX = ((frame - scaledWidth) / 2) + offsetX;
+    const drawY = ((frame - scaledHeight) / 2) + offsetY;
+    const factor = outputSize / frame;
+
+    context.drawImage(
+      activeImage,
+      drawX * factor,
+      drawY * factor,
+      scaledWidth * factor,
+      scaledHeight * factor,
+    );
+
+    croppedInput.value = canvas.toDataURL("image/png", 0.92);
+    return Promise.resolve();
+  };
+
+  if (activeImage && activeImage.getAttribute("src")) {
+    sourceUrl = activeImage.getAttribute("src") || "";
+    naturalWidth = activeImage.naturalWidth || 0;
+    naturalHeight = activeImage.naturalHeight || 0;
+    if (!naturalWidth || !naturalHeight) {
+      activeImage.addEventListener("load", () => {
+        naturalWidth = activeImage?.naturalWidth || 0;
+        naturalHeight = activeImage?.naturalHeight || 0;
+        renderImage();
+      }, { once: true });
+    } else {
+      renderImage();
+    }
+  } else {
+    zoomInput.disabled = true;
+  }
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (sourceUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(sourceUrl);
+    }
+
+    loadImage(URL.createObjectURL(file));
+  });
+
+  zoomInput.addEventListener("input", () => {
+    zoom = Number(zoomInput.value) || 1;
+    renderImage();
+  });
+
+  preview.addEventListener("pointerdown", (event) => {
+    if (!activeImage || !sourceUrl) {
+      return;
+    }
+
+    dragState = {
+      x: event.clientX,
+      y: event.clientY,
+      startX: offsetX,
+      startY: offsetY,
+    };
+
+    preview.setPointerCapture(event.pointerId);
+  });
+
+  preview.addEventListener("pointermove", (event) => {
+    if (!dragState) {
+      return;
+    }
+
+    offsetX = dragState.startX + (event.clientX - dragState.x);
+    offsetY = dragState.startY + (event.clientY - dragState.y);
+    renderImage();
+  });
+
+  const stopDragging = () => {
+    dragState = null;
+  };
+
+  preview.addEventListener("pointerup", stopDragging);
+  preview.addEventListener("pointercancel", stopDragging);
+  preview.addEventListener("pointerleave", stopDragging);
+
+  window.addEventListener("resize", renderImage);
+
+  form.addEventListener("submit", (event) => {
+    if (!fileInput.files?.length) {
+      croppedInput.value = "";
+      return;
+    }
+
+    event.preventDefault();
+    exportCroppedImage().then(() => {
+      form.submit();
+    });
+  });
+});
+
+/* Course-page chatbot: zero-cost grounded assistant.
+   Answers from the current lesson content (description, support, quiz).
+   No API key, no network calls. */
+document.querySelectorAll("[data-course-chatbot]").forEach((root) => {
+  let ctx = {};
+  try {
+    ctx = JSON.parse(root.querySelector("[data-course-chat-context]").textContent || "{}");
+  } catch {
+    ctx = {};
+  }
+  const strings = ctx.strings || {};
+  const panel = root.querySelector("[data-course-chat-panel]");
+  const messages = root.querySelector("[data-course-chat-messages]");
+  const form = root.querySelector("[data-course-chat-form]");
+  const input = root.querySelector("[data-course-chat-input]");
+  const toggles = root.querySelectorAll("[data-course-chat-toggle]");
+  if (!panel || !messages || !form || !input) return;
+
+  const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, " ").replace(/[^\p{L}\p{N} ]/gu, " ");
+  const STOP = new Set("le la les de des du un une et est en dans que qui pour avec sur au aux ce ces il elle ils elles the and of to in a an is are was were for on with el en los las del que una por como mais ou donc or ni car je tu nous vous c est qu il elle on y pas plus tout tous toute anaa anta anti huwa hiya nahnu antum allati alladhi ma man hal".split(" "));
+  const tokens = (s) => norm(s).split(/\s+/).filter((w) => w.length > 2 && !STOP.has(w));
+
+  const sentencesOf = (text, source) => (text || "").split(/(?<=[.!?\n])\s+/).map((s) => s.trim()).filter((s) => s.length > 12).map((s) => ({ text: s, source, words: new Set(tokens(s)) }));
+
+  const index = [
+    ...sentencesOf(ctx.description, strings.source_course || ""),
+    ...sentencesOf(ctx.support, strings.source_support || ""),
+    ...(Array.isArray(ctx.quiz) ? ctx.quiz : []).map((q) => ({ text: q, source: strings.source_quiz || "", words: new Set(tokens(q)) })),
+  ];
+
+  const GREEK = { omega: "ω", Omega: "Ω", pi: "π", Pi: "Π", theta: "θ", alpha: "α", beta: "β", delta: "Δ", lambda: "λ", mu: "μ", sigma: "σ", phi: "φ" };
+  const cleanLatex = (t) => {
+    let s = t || "";
+    s = s.replace(/\$\\frac\{([^}]*)\}\{([^}]*)\}\$/g, "($1)/($2)");
+    s = s.replace(/\$\\text\{([^}]*)\}\$/g, "$1");
+    s = s.replace(/\$\\([a-zA-Z]+)\$/g, (m, n) => GREEK[n] || n);
+    s = s.replace(/\$([^$\n]+)\$/g, "$1");
+    s = s.replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, "($1)/($2)");
+    s = s.replace(/\\text\{([^}]*)\}/g, "$1");
+    s = s.replace(/\\([a-zA-Z]+)/g, (m, n) => GREEK[n] || "");
+    return s.replace(/[ \t]+/g, " ").trim();
+  };
+
+  const has = (t, ...needles) => needles.some((n) => norm(t).includes(norm(n)));
+
+  const addMsg = (text, who, source) => {
+    const div = document.createElement("div");
+    div.className = "course-chat__msg course-chat__msg--" + who;
+    div.textContent = text;
+    if (who === "bot" && source) {
+      const src = document.createElement("span");
+      src.className = "course-chat__src";
+      src.textContent = source;
+      div.append(src);
+    }
+    messages.append(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
+  };
+
+  const answer = (raw) => {
+    const q = (raw || "").trim();
+    if (!q) return null;
+    if (has(q, "bonjour", "salut", "hello", "salam", "azul", "cc", "coucou")) {
+      return { text: strings.welcome || "Bonjour !", source: "" };
+    }
+    if (has(q, "quiz", "qcm", "exercice", "exo", "questions", "test", "evaluation")) {
+      if (ctx.quiz && ctx.quiz.length) {
+        const shown = ctx.quiz.slice(0, 3).map((t, i) => (i + 1) + ". " + t).join("\n");
+        return { text: ctx.quiz.length + " question(s):\n" + shown, source: strings.source_quiz || "" };
+      }
+      return { text: strings.fallback || "", source: "" };
+    }
+    if (has(q, "fichier", "pdf", "support", "telecharger", "download", "file", "???", "?????")) {
+      return { text: ctx.hasFile ? (strings.source_support || "") + " : " + (strings.suggest_file || "") + " disponible sous la video." : (strings.fallback || ""), source: "" };
+    }
+    if (has(q, "premium", "prix", "payer", "abonnement", "payant", "price", "pay", "?????", "?????")) {
+      return { text: strings.premium_note || "", source: "" };
+    }
+    if (has(q, "prof", "enseignant", "teacher", "?????", "???????")) {
+      return { text: (ctx.teacher || "") + " - " + (ctx.title || ""), source: "" };
+    }
+    if (has(q, "resume", "resumer", "c est quoi", "cest quoi", "parle de quoi", "summar", "summary", "???", "????", "de quoi")) {
+      const top = index.filter((s) => s.source !== (strings.source_quiz || "x")).slice(0, 3);
+      if (top.length) return { text: top.map((s) => s.text).join(" "), source: top[0].source };
+      return { text: strings.fallback || "", source: "" };
+    }
+    if (ctx.locked) return { text: strings.premium_note || "", source: "" };
+    const qWords = new Set(tokens(q));
+    if (!qWords.size) return { text: strings.fallback || "", source: "" };
+    const scored = index.map((s) => {
+      let score = 0;
+      qWords.forEach((w) => { if (s.words.has(w)) score += 1; });
+      return { s, score };
+    }).filter((r) => r.score > 0).sort((a, b) => b.score - a.score).slice(0, 2);
+    if (!scored.length) return { text: strings.fallback || "", source: "" };
+    return { text: scored.map((r) => r.s.text).join(" "), source: scored[0].s.source };
+  };
+
+  const ask = (text) => {
+    const clean = (text || "").trim();
+    if (!clean) return;
+    addMsg(clean, "user", "");
+    const typing = addMsg("…", "bot", "");
+    typing.classList.add("course-chat__msg--typing");
+    const endpoint = root.getAttribute("data-endpoint") || "";
+    const csrf = root.getAttribute("data-csrf") || "";
+    const payload = {
+      message: clean,
+      title: ctx.title || "",
+      teacher: ctx.teacher || "",
+      description: (ctx.description || "").slice(0, 4000),
+      support: (ctx.support || "").slice(0, 4000),
+      quiz: Array.isArray(ctx.quiz) ? ctx.quiz.slice(0, 10) : [],
+    };
+    const done = (replyText, source) => {
+      typing.remove();
+      if (replyText) addMsg(cleanLatex(replyText), "bot", source || "");
+      else {
+        const res = answer(clean);
+        if (res) addMsg(cleanLatex(res.text), "bot", res.source);
+      }
+    };
+    if (!endpoint) {
+      setTimeout(() => done(null), 450);
+      return;
+    }
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json", "X-CSRF-TOKEN": csrf },
+      body: JSON.stringify(payload),
+    }).then((res) => (res.ok ? res.json() : null)).then((data) => {
+      done(data && data.reply ? data.reply : null);
+    }).catch(() => done(null));
+  };
+
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    toggles.forEach((b) => b.setAttribute("aria-expanded", open ? "true" : "false"));
+    if (open) {
+      if (!messages.children.length) addMsg(strings.welcome || "Bonjour !", "bot", "");
+      input.focus();
+    }
+  };
+
+  toggles.forEach((b) => b.addEventListener("click", () => setOpen(panel.hidden)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !panel.hidden) setOpen(false);
+  });
+  root.querySelectorAll("[data-course-chat-ask]").forEach((b) => b.addEventListener("click", () => {
+    const kind = b.getAttribute("data-course-chat-ask");
+    if (kind === "summary") ask(strings.suggest_summary || "");
+    else if (kind === "quiz") ask(strings.suggest_quiz || "");
+    else ask(strings.suggest_file || "");
+  }));
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    ask(input.value);
+    input.value = "";
+  });
 });

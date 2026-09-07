@@ -25,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'phone',
+        'profile_photo_path',
         'role',
         'preferred_locale',
         'subscription_tier',
@@ -75,7 +76,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        return filled($this->premium_level_key) && $this->premium_level_key === $levelKey;
+        return filled($this->premium_level_key) && \App\Support\LevelAudience::matches($levelKey, $this->premium_level_key);
     }
 
     public function teacherLessons(): HasMany

@@ -3,6 +3,7 @@
 @php
     $labels = match ($locale) {
         'ar' => [
+            'eyebrow' => 'دليل الأساتذة',
             'title' => 'اختر الأستاذ الذي تريده',
             'subtitle' => 'اختر أولاً المستوى، ثم الشعبة، ثم المادة للعثور بسرعة على الأستاذ المناسب.',
             'level' => 'المستوى',
@@ -19,6 +20,7 @@
             'empty' => 'لا يوجد أستاذ مطابق لهذا الاختيار.',
         ],
         'en' => [
+            'eyebrow' => 'Teacher directory',
             'title' => 'Choose the teacher you want',
             'subtitle' => 'Select the level first, then the track, then the subject to find the right teacher faster.',
             'level' => 'Level',
@@ -35,6 +37,7 @@
             'empty' => 'No teacher matches this selection.',
         ],
         default => [
+            'eyebrow' => 'Annuaire des professeurs',
             'title' => 'Choisissez le professeur que vous voulez',
             'subtitle' => 'Choisissez d’abord le niveau, puis la filière, puis la matière pour trouver plus vite le bon professeur.',
             'level' => 'Niveau',
@@ -55,6 +58,9 @@
     $subjectKeys = $selectedLevel && $selectedTrack && isset($matrix[$selectedLevel]['tracks'][$selectedTrack]['subjects'])
         ? $matrix[$selectedLevel]['tracks'][$selectedTrack]['subjects']
         : array_keys($subjectOptions);
+    if ($selectedSubject !== '' && ! in_array($selectedSubject, $subjectKeys, true)) {
+        array_unshift($subjectKeys, $selectedSubject);
+    }
 @endphp
 
 @php
@@ -70,12 +76,14 @@
 
         <section class="glass-card teacher-directory-hero">
             <div class="teacher-directory-hero__copy">
+                <span class="teacher-directory-hero__eyebrow">{{ $labels['eyebrow'] }}</span>
                 <h1>{{ $labels['title'] }}</h1>
                 <p>{{ $labels['subtitle'] }}</p>
             </div>
 
             <form class="teacher-directory-filters" method="GET" action="{{ route('teacher.index.locale', ['locale' => $locale]) }}">
-                <div class="teacher-directory-filters__grid">
+                <div class="teacher-directory-filters__panel">
+                    <div class="teacher-directory-filters__grid">
                     <label class="admin-form-field">
                         <span>{{ $labels['level'] }}</span>
                         <select name="level" onchange="this.form.submit()">
@@ -123,6 +131,7 @@
                         <button class="primary-btn" type="submit">{{ $labels['filter'] }}</button>
                     </div>
                 </div>
+                </div>
             </form>
         </section>
 
@@ -136,20 +145,11 @@
                     @php
                         $teacherLessons = $teacher->teacherLessons ?? collect();
                         $levelTags = [];
-                        $trackTags = [];
                         $subjectTags = [];
 
                         foreach ($teacherLessons as $lesson) {
                             if (filled($lesson->level_label) && ! in_array($lesson->level_label, $levelTags, true) && count($levelTags) < 2) {
                                 $levelTags[] = $lesson->level_label;
-                            }
-
-                            $trackValue = str_contains((string) $lesson->level_key, '::')
-                                ? trim((string) Str::after((string) $lesson->level_key, '::'))
-                                : null;
-
-                            if (filled($trackValue) && ! in_array($trackValue, $trackTags, true) && count($trackTags) < 2) {
-                                $trackTags[] = $trackValue;
                             }
 
                             if (filled($lesson->subject_label) && ! in_array($lesson->subject_label, $subjectTags, true) && count($subjectTags) < 2) {
@@ -169,9 +169,6 @@
                             <div class="teacher-directory-card__chips">
                                 @foreach ($levelTags as $tag)
                                     <span class="ghost-pill ghost-pill--soft">{{ $tag }}</span>
-                                @endforeach
-                                @foreach ($trackTags as $tag)
-                                    <span class="ghost-pill">{{ $tag }}</span>
                                 @endforeach
                                 @foreach ($subjectTags as $tag)
                                     <span class="ghost-pill">{{ $tag }}</span>
