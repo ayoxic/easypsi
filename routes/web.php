@@ -312,7 +312,12 @@ Route::post('/language', function (Request $request) use ($resolveLocale) {
     return redirect()->to($validated['redirect_to'] ?? url()->previous() ?? route('welcome.locale', ['locale' => $locale]));
 })->name('language.update');
 
-Route::redirect('/', '/fr');
+Route::get('/', function () use ($baseViewData) {
+    $data = $baseViewData('fr');
+    $data['title'] = 'EasyPsi';
+
+    return view('welcome', $data);
+});
 
 Route::get('/{locale}', function (string $locale) use ($resolveLocale, $baseViewData) {
     $locale = $resolveLocale($locale);
