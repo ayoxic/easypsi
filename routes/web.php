@@ -39,6 +39,8 @@ $baseViewData = static function (string $locale) use ($locales): array {
     ];
 };
 
+Route::get('/healthz', static fn () => response('ok', 200));
+
 $teacherSubjectOptions = static function (string $locale): array {
     return match ($locale) {
         'ar' => [
