@@ -5,6 +5,15 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+if (($_SERVER['REQUEST_URI'] ?? '') === '/healthz') {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'ok'
+        ."\napp_key=".(getenv('APP_KEY') ? 'set' : 'missing')
+        ."\nsession_driver=".(getenv('SESSION_DRIVER') ?: 'missing')
+        ."\ncache_store=".(getenv('CACHE_STORE') ?: 'missing');
+    exit;
+}
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;
