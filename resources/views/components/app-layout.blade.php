@@ -11,6 +11,10 @@
 
         <title>{{ config('app.name', 'EasyPsi') }}</title>
 
+        <link rel="icon" type="image/jpeg" href="{{ asset('logo.jpeg') }}">
+        <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+        <link rel="apple-touch-icon" href="{{ asset('logo.jpeg') }}">
+
         @if ($hasViteBuild)
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @else
