@@ -384,9 +384,7 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
             return back()->withErrors(['email' => $message])->withInput();
         }
 
-        if (! env('VERCEL')) {
-            $request->session()->regenerate();
-        }
+        $request->session()->regenerate();
 
         $role = Auth::user()?->role;
 
