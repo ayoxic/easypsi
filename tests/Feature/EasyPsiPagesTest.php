@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\Auth\ResetPasswordNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
@@ -162,6 +164,30 @@ class EasyPsiPagesTest extends TestCase
             'phone' => '0600000000',
             'role' => 'student',
             'preferred_locale' => 'en',
+        ]);
+    }
+
+    public function test_registration_still_succeeds_when_verification_email_fails(): void
+    {
+        Event::listen(Registered::class, function () {
+            throw new \RuntimeException('Mail transport failed.');
+        });
+
+        $response = $this->post('/fr/register', [
+            'name' => 'Mail Failure User',
+            'email' => 'mail-failure@example.com',
+            'phone' => '0600000001',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+        ]);
+
+        $response->assertRedirect('/fr/login');
+
+        $this->assertDatabaseHas('users', [
+            'name' => 'Mail Failure User',
+            'email' => 'mail-failure@example.com',
+            'role' => 'student',
+            'preferred_locale' => 'fr',
         ]);
     }
 

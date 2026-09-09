@@ -436,7 +436,11 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
             'password' => $validated['password'],
         ]);
 
-        event(new Registered($user));
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
 
         return redirect()->route('login.locale', ['locale' => $locale])->with('status', config("easypsi.locales.$locale.login.success_registered"));
     })->name('register.submit');
