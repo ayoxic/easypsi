@@ -13,6 +13,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -361,6 +362,7 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
         );
 
         $remember = $request->boolean('remember');
+        Log::info('[DEBUG-login-v1] login-start', ['email' => $credentials['email'], 'session_driver' => config('session.driver')]);
 
         try {
             $user = User::where('email', $credentials['email'])->first();
@@ -372,6 +374,8 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
             if (! Auth::attempt($credentials, $remember)) {
                 return back()->withErrors(['email' => __('auth.failed')])->withInput();
             }
+
+            Log::info('[DEBUG-login-v1] auth-attempt-ok', ['role' => Auth::user()?->role]);
         } catch (QueryException $exception) {
             report($exception);
 
@@ -385,8 +389,10 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
         }
 
         $request->session()->regenerate();
+        Log::info('[DEBUG-login-v1] session-regenerated', ['role' => Auth::user()?->role]);
 
         $role = Auth::user()?->role;
+        Log::info('[DEBUG-login-v1] redirecting', ['role' => $role]);
 
         return match ($role) {
             'teacher' => redirect()->route('teacher.space.locale', ['locale' => $locale]),
