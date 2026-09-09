@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
@@ -33,6 +34,20 @@ class AppServiceProvider extends ServiceProvider
                 'token' => $token,
                 'email' => $notifiable->getEmailForPasswordReset(),
             ]);
+        });
+
+        VerifyEmail::createUrlUsing(function (object $notifiable): string {
+            $locale = $notifiable->preferred_locale ?? 'ar';
+
+            return URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes(config('auth.verification.expire', 60)),
+                [
+                    'locale' => $locale,
+                    'id' => $notifiable->getKey(),
+                    'hash' => sha1($notifiable->getEmailForVerification()),
+                ],
+            );
         });
     }
 }

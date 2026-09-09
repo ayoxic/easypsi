@@ -48,13 +48,20 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp \
 
 ENV PORT=80 \
     VERCEL=1 \
+    APP_NAME=EasyPsi \
     APP_ENV=production \
     APP_DEBUG=false \
+    APP_URL=https://easypsi-vgws.vercel.app \
+    APP_LOCALE=fr \
+    APP_FALLBACK_LOCALE=fr \
     LOG_CHANNEL=stderr \
     CACHE_STORE=array \
     APP_MAINTENANCE_DRIVER=file \
     APP_MAINTENANCE_STORE=array \
     SESSION_DRIVER=cookie \
+    SESSION_SECURE_COOKIE=true \
+    SESSION_SAME_SITE=lax \
+    SESSION_HTTP_ONLY=true \
     QUEUE_CONNECTION=sync
 
 USER www-data

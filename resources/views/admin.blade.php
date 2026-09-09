@@ -121,6 +121,9 @@
         <section class="admin-hero glass-card">
             <div class="admin-hero-copy">
                 <span class="brand-chip">{{ $brandLabel }}</span>
+                @if ($locale === 'fr')
+                    <span class="admin-section-chip">Tableau de bord administrateur</span>
+                @endif
                 <h1 class="section-title">{{ $text['title'] }}</h1>
                 <p>{{ $text['subtitle'] }}</p>
             </div>
@@ -153,6 +156,7 @@
             <article class="admin-panel admin-panel--full">
                 <div class="admin-panel-heading admin-panel-heading--accounts">
                     <span class="admin-section-chip">{{ $text['students'] }}</span>
+                    <span class="admin-section-chip">users</span>
                     <h2 class="panel-title">{{ $text['title'] }}</h2>
                 </div>
 

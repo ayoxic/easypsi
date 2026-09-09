@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER') ?: (env('VERCEL') ? 'cookie' : 'database'),
+    'driver' => env('VERCEL') ? 'cookie' : (env('SESSION_DRIVER') ?: 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -153,7 +153,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN') ?: null,
+    'domain' => env('VERCEL') ? null : (env('SESSION_DOMAIN') ?: null),
 
     /*
     |--------------------------------------------------------------------------
@@ -166,7 +166,7 @@ return [
     |
     */
 
-    'secure' => filter_var(env('SESSION_SECURE_COOKIE', env('VERCEL') ? true : false), FILTER_VALIDATE_BOOL),
+    'secure' => env('VERCEL') ? true : filter_var(env('SESSION_SECURE_COOKIE', false), FILTER_VALIDATE_BOOL),
 
     /*
     |--------------------------------------------------------------------------
@@ -196,7 +196,7 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE') ?: 'lax',
+    'same_site' => env('VERCEL') ? 'lax' : (env('SESSION_SAME_SITE') ?: 'lax'),
 
     /*
     |--------------------------------------------------------------------------

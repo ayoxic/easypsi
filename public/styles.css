@@ -23,6 +23,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -4344,7 +4348,8 @@ body[dir="rtl"] .student-profile-dropdown--ar > form button:hover {
   font-weight: 700;
 }
 
-.student-form-field input {
+.student-form-field input,
+.student-form-field select {
   width: 100%;
   min-height: 50px;
   padding: 0 16px;
@@ -4352,6 +4357,11 @@ body[dir="rtl"] .student-profile-dropdown--ar > form button:hover {
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: #ffffff;
   color: #0f172a;
+}
+
+.student-form-field select[multiple] {
+  min-height: auto;
+  padding-block: 8px;
 }
 
 .student-form-field input[type="file"] {

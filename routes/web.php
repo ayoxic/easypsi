@@ -9,13 +9,16 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 $locales = config('easypsi.locales', []);
 
@@ -313,10 +316,7 @@ Route::post('/language', function (Request $request) use ($resolveLocale) {
 })->name('language.update');
 
 Route::get('/', function () use ($baseViewData) {
-    $data = $baseViewData('fr');
-    $data['title'] = 'EasyPsi';
-
-    return view('welcome', $data);
+    return redirect()->route('login.locale', ['locale' => 'ar']);
 });
 
 Route::get('/{locale}', function (string $locale) use ($resolveLocale, $baseViewData) {
@@ -334,6 +334,12 @@ Route::get('/{locale}/payment', function (string $locale) use ($resolveLocale, $
     return view('payment', $data);
 })->name('payment.locale');
 
+Route::get('/{locale}/course', function (string $locale) use ($resolveLocale, $baseViewData) {
+    $locale = $resolveLocale($locale);
+
+    return view('course', $baseViewData($locale));
+})->name('course.locale');
+
 Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData) {
     Route::get('/{locale}/login', function (string $locale) use ($resolveLocale, $baseViewData) {
         $locale = $resolveLocale($locale);
@@ -342,20 +348,40 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
 
     Route::post('/{locale}/login', function (Request $request, string $locale) use ($resolveLocale) {
         $locale = $resolveLocale($locale);
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        app()->setLocale($locale);
+        $credentials = $request->validate(
+            [
+                'email' => ['required', 'email'],
+                'password' => ['required', 'string'],
+            ],
+            [
+                'email.required' => $locale === 'fr' ? 'Le champ Adresse email est obligatoire.' : null,
+                'password.required' => $locale === 'fr' ? 'Le champ Mot de passe est obligatoire.' : null,
+            ],
+        );
 
         $remember = $request->boolean('remember');
-        $user = User::where('email', $credentials['email'])->first();
 
-        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
-            return back()->withErrors(['email' => config("easypsi.locales.$locale.login.verify_email_required")])->withInput();
-        }
+        try {
+            $user = User::where('email', $credentials['email'])->first();
 
-        if (! Auth::attempt($credentials, $remember)) {
-            return back()->withErrors(['email' => __('auth.failed')])->withInput();
+            if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+                return back()->withErrors(['email' => config("easypsi.locales.$locale.login.verify_email_required")])->withInput();
+            }
+
+            if (! Auth::attempt($credentials, $remember)) {
+                return back()->withErrors(['email' => __('auth.failed')])->withInput();
+            }
+        } catch (QueryException $exception) {
+            report($exception);
+
+            $message = match ($locale) {
+                'ar' => 'قاعدة بيانات الموقع غير متصلة حاليا. تحقق من إعدادات قاعدة البيانات في Vercel.',
+                'en' => 'The production database is not connected yet. Check the database environment variables in Vercel.',
+                default => 'La base de données de production n’est pas encore connectée. Vérifiez les variables de base de données dans Vercel.',
+            };
+
+            return back()->withErrors(['email' => $message])->withInput();
         }
 
         $request->session()->regenerate();
@@ -383,12 +409,19 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
 
     Route::post('/{locale}/register', function (Request $request, string $locale) use ($resolveLocale) {
         $locale = $resolveLocale($locale);
+        app()->setLocale($locale);
+        if (! $request->filled('role')) {
+            $request->merge(['role' => 'student']);
+        }
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:50'],
             'role' => ['required', 'in:student,teacher'],
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()],
+        ], [
+            'password.min' => 'The Password field must contain at least 8 characters and 1 number.',
+            'password.numbers' => 'The Password field must contain at least 8 characters and 1 number.',
         ]);
 
         $user = User::create([
@@ -413,12 +446,32 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
 
     Route::post('/{locale}/forgot-password', function (Request $request, string $locale) use ($resolveLocale) {
         $locale = $resolveLocale($locale);
+        app()->setLocale($locale);
         $request->validate(['email' => ['required', 'email']]);
-        $status = Password::sendResetLink($request->only('email'));
+        $email = (string) $request->input('email');
+        $throttleKey = 'password-reset:'.Str::lower($email).'|'.$request->ip();
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', __($status))
-            : back()->withErrors(['email' => __($status)]);
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            return back()->withErrors([
+                'email' => config("easypsi.locales.$locale.login.forgot_rate_limited", 'Too many reset requests. Please try again in a few minutes.'),
+            ]);
+        }
+
+        RateLimiter::hit($throttleKey, 60);
+
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            return back()->withErrors([
+                'email' => $locale === 'fr'
+                    ? "Cet email n'existe pas dans la base de donnees."
+                    : __('passwords.user'),
+            ]);
+        }
+
+        $token = Password::broker()->createToken($user);
+        $user->notify(new \App\Notifications\Auth\ResetPasswordNotification($token, $locale));
+
+        return back()->with('status', config("easypsi.locales.$locale.login.forgot_success", __('passwords.sent')));
     })->name('password.email');
 
     Route::get('/{locale}/reset-password/{token}', function (string $locale, string $token, Request $request) use ($resolveLocale, $baseViewData) {
@@ -991,10 +1044,13 @@ Route::middleware('auth')->group(function () use (
     })->name('teacher.content.delete');
 
     Route::get('/{locale}/admin', function (Request $request, string $locale) use ($resolveLocale, $baseViewData) {
-        abort_unless($request->user()->role === 'admin', 403);
         $locale = $resolveLocale($locale);
+        if ($request->user()->role !== 'admin') {
+            return redirect()->route('course.locale', ['locale' => $locale])
+                ->withErrors(['email' => 'Acces reserve aux administrateurs.']);
+        }
         $search = trim((string) $request->query('student_search'));
-        $users = User::query()->where('role', 'student');
+        $users = User::query()->whereIn('role', ['student', 'admin']);
         if ($search !== '') {
             $users->where(function ($query) use ($search) {
                 $query->where('name', 'like', '%'.$search.'%')
@@ -1022,8 +1078,11 @@ Route::middleware('auth')->group(function () use (
     })->name('admin.locale');
 
     Route::post('/{locale}/admin/users/{user}/subscription', function (Request $request, string $locale, User $user) use ($resolveLocale) {
-        abort_unless($request->user()->role === 'admin', 403);
-    $locale = $resolveLocale($locale);
+        $locale = $resolveLocale($locale);
+        if ($request->user()->role !== 'admin') {
+            return redirect()->route('course.locale', ['locale' => $locale])
+                ->withErrors(['email' => 'Acces reserve aux administrateurs.']);
+        }
         $validated = $request->validate([
             'subscription_tier' => ['required', 'in:free,premium'],
             'premium_duration' => ['nullable', 'in:1_month,6_months,1_year'],
