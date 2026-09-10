@@ -437,10 +437,12 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
                 'password' => $validated['password'],
             ]);
 
-            try {
-                event(new Registered($user));
-            } catch (\Throwable $exception) {
-                report($exception);
+            if (! app()->environment('production')) {
+                try {
+                    event(new Registered($user));
+                } catch (\Throwable $exception) {
+                    report($exception);
+                }
             }
         } catch (\Throwable $exception) {
             logger()->error('[DEBUG-register-v2] registration failed', [
@@ -451,7 +453,7 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
             throw $exception;
         }
 
-        return redirect()->route('login.locale', ['locale' => $locale])->with('status', config("easypsi.locales.$locale.login.success_registered"));
+        return redirect()->route('login.locale', ['locale' => $locale]);
     })->name('register.submit');
 
     Route::get('/{locale}/forgot-password', function (string $locale) use ($resolveLocale, $baseViewData) {
