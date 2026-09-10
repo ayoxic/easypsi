@@ -444,13 +444,15 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
                     report($exception);
                 }
             }
-        } catch (\Throwable $exception) {
-            logger()->error('[DEBUG-register-v2] registration failed', [
-                'type' => $exception::class,
-                'message' => $exception->getMessage(),
-            ]);
-
+        } catch (\Illuminate\Validation\ValidationException $exception) {
             throw $exception;
+        } catch (\Throwable $exception) {
+            report($exception);
+            $message = app()->environment('production')
+                ? 'Registration is temporarily unavailable. Please try again later.'
+                : $exception->getMessage();
+
+            return back()->withErrors(['email' => $message])->withInput();
         }
 
         return redirect()->route('login.locale', ['locale' => $locale]);
