@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Notifications\Auth\ResetPasswordNotification;
+use App\Notifications\Auth\VerifyEmailNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -148,6 +149,8 @@ class EasyPsiPagesTest extends TestCase
 
     public function test_registration_saves_user_data_in_users_table(): void
     {
+        Notification::fake();
+
         $response = $this->post('/en/register', [
             'name' => 'Test Student',
             'email' => 'student@example.com',
@@ -156,7 +159,7 @@ class EasyPsiPagesTest extends TestCase
             'password_confirmation' => 'secret123',
         ]);
 
-        $response->assertRedirect('/en/login');
+        $response->assertRedirect('/en/verify-email');
 
         $this->assertDatabaseHas('users', [
             'name' => 'Test Student',
@@ -165,6 +168,12 @@ class EasyPsiPagesTest extends TestCase
             'role' => 'student',
             'preferred_locale' => 'en',
         ]);
+
+        $user = User::where('email', 'student@example.com')->firstOrFail();
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertFalse($user->hasVerifiedEmail());
+        Notification::assertSentTo($user, VerifyEmailNotification::class);
     }
 
     public function test_registration_still_succeeds_when_verification_email_fails(): void
@@ -181,7 +190,7 @@ class EasyPsiPagesTest extends TestCase
             'password_confirmation' => 'secret123',
         ]);
 
-        $response->assertRedirect('/fr/login');
+        $response->assertRedirect('/fr/verify-email');
 
         $this->assertDatabaseHas('users', [
             'name' => 'Mail Failure User',
@@ -189,6 +198,40 @@ class EasyPsiPagesTest extends TestCase
             'role' => 'student',
             'preferred_locale' => 'fr',
         ]);
+
+        $this->assertAuthenticatedAs(User::where('email', 'mail-failure@example.com')->firstOrFail());
+    }
+
+    public function test_unverified_login_redirects_to_verification_notice(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'email' => 'unverified-login@example.com',
+            'password' => 'secret123',
+            'preferred_locale' => 'fr',
+        ]);
+
+        $response = $this->post('/fr/login', [
+            'email' => 'unverified-login@example.com',
+            'password' => 'secret123',
+        ]);
+
+        $response->assertRedirect('/fr/verify-email');
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_unverified_user_is_redirected_from_account_pages_to_verification_notice(): void
+    {
+        $student = User::factory()->unverified()->create([
+            'email' => 'unverified-account@example.com',
+            'role' => 'student',
+            'preferred_locale' => 'fr',
+        ]);
+
+        $this->actingAs($student);
+
+        $response = $this->get('/fr/student-profile');
+
+        $response->assertRedirect('/fr/verify-email');
     }
 
     public function test_registration_password_requires_eight_characters_and_a_number(): void

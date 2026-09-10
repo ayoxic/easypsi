@@ -370,7 +370,10 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
             }
 
             if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
-                return back()->withErrors(['email' => config("easypsi.locales.$locale.login.verify_email_required")])->withInput();
+                Auth::login($user, $remember);
+                $request->session()->regenerate();
+
+                return redirect()->route('verification.notice', ['locale' => $locale]);
             }
 
             Auth::login($user, $remember);
@@ -437,12 +440,10 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
                 'password' => $validated['password'],
             ]);
 
-            if (! app()->environment('production')) {
-                try {
-                    event(new Registered($user));
-                } catch (\Throwable $exception) {
-                    report($exception);
-                }
+            try {
+                event(new Registered($user));
+            } catch (\Throwable $exception) {
+                report($exception);
             }
         } catch (\Illuminate\Validation\ValidationException $exception) {
             throw $exception;
@@ -455,7 +456,10 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
             return back()->withErrors(['email' => $message])->withInput();
         }
 
-        return redirect()->route('login.locale', ['locale' => $locale]);
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect()->route('verification.notice', ['locale' => $locale]);
     })->name('register.submit');
 
     Route::get('/{locale}/forgot-password', function (string $locale) use ($resolveLocale, $baseViewData) {
@@ -564,7 +568,7 @@ Route::middleware('auth')->group(function () use (
         $data['user'] = $request->user();
 
         return view('student-profile', $data);
-    })->name('student.profile.locale');
+    })->middleware('verified')->name('student.profile.locale');
 
     Route::patch('/profile', function (Request $request) {
         $user = $request->user();
@@ -610,7 +614,7 @@ Route::middleware('auth')->group(function () use (
         $user->save();
 
         return back()->with('status', 'profile-updated');
-    })->name('profile.update');
+    })->middleware('verified')->name('profile.update');
 
     Route::put('/password', function (Request $request) {
         $request->validateWithBag('updatePassword', [
@@ -879,7 +883,7 @@ Route::middleware('auth')->group(function () use (
             'teacherLessons' => $lessons,
             'teacherUser' => $teacher,
         ]));
-    })->name('teacher.space.locale');
+    })->middleware('verified')->name('teacher.space.locale');
 
     Route::post('/{locale}/teacher-space/content', function (Request $request, string $locale) use ($resolveLocale, $teacherSubjectOptions, $levelMatrix) {
         abort_unless(in_array($request->user()->role, ['teacher', 'admin'], true), 403);
@@ -1044,7 +1048,7 @@ Route::middleware('auth')->group(function () use (
         );
 
         return redirect()->route('teacher.space.locale', ['locale' => $locale])->with('status', 'Contenu enregistré.');
-    })->name('teacher.content.store');
+    })->middleware('verified')->name('teacher.content.store');
 
     Route::post('/{locale}/teacher-space/content/{asset}/delete', function (Request $request, string $locale, TeacherLessonAsset $asset) use ($resolveLocale) {
         abort_unless(in_array($request->user()->role, ['teacher', 'admin'], true), 403);
@@ -1060,7 +1064,7 @@ Route::middleware('auth')->group(function () use (
         }
 
         return redirect()->route('teacher.space.locale', ['locale' => $locale])->with('status', 'Contenu supprimé.');
-    })->name('teacher.content.delete');
+    })->middleware('verified')->name('teacher.content.delete');
 
     Route::get('/{locale}/admin', function (Request $request, string $locale) use ($resolveLocale, $baseViewData) {
         $locale = $resolveLocale($locale);
@@ -1094,7 +1098,7 @@ Route::middleware('auth')->group(function () use (
             'levelOptions' => $levelOptions,
             'todayDate' => now()->format('Y-m-d'),
         ]));
-    })->name('admin.locale');
+    })->middleware('verified')->name('admin.locale');
 
     Route::post('/{locale}/admin/users/{user}/subscription', function (Request $request, string $locale, User $user) use ($resolveLocale) {
         $locale = $resolveLocale($locale);
@@ -1122,5 +1126,5 @@ Route::middleware('auth')->group(function () use (
         $user->save();
 
         return redirect()->route('admin.locale', ['locale' => $locale, 'student_search' => $validated['student_search'] ?? null])->with('status', 'Abonnement mis à jour.');
-    })->name('admin.users.subscription.update');
+    })->middleware('verified')->name('admin.users.subscription.update');
 });

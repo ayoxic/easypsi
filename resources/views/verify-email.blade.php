@@ -8,7 +8,7 @@
     <main class="simple-login-shell">
         <section class="simple-login-card" dir="{{ $dir }}">
             <div class="simple-login-topbar">
-                @include('partials.locale-switcher', ['routeName' => 'verification.notice.locale'])
+                @include('partials.locale-switcher', ['routeName' => 'verification.notice'])
             </div>
 
             <div class="simple-login-brand">
