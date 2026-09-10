@@ -415,31 +415,40 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
         if (! $request->filled('role')) {
             $request->merge(['role' => 'student']);
         }
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', 'in:student,teacher'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()],
-        ], [
-            'password.min' => 'The Password field must contain at least 8 characters and 1 number.',
-            'password.numbers' => 'The Password field must contain at least 8 characters and 1 number.',
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'role' => $validated['role'],
-            'preferred_locale' => $locale,
-            'subscription_tier' => 'free',
-            'password' => $validated['password'],
-        ]);
-
         try {
-            event(new Registered($user));
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'phone' => ['nullable', 'string', 'max:50'],
+                'role' => ['required', 'in:student,teacher'],
+                'password' => ['required', 'confirmed', PasswordRule::min(8)->numbers()],
+            ], [
+                'password.min' => 'The Password field must contain at least 8 characters and 1 number.',
+                'password.numbers' => 'The Password field must contain at least 8 characters and 1 number.',
+            ]);
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'role' => $validated['role'],
+                'preferred_locale' => $locale,
+                'subscription_tier' => 'free',
+                'password' => $validated['password'],
+            ]);
+
+            try {
+                event(new Registered($user));
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
         } catch (\Throwable $exception) {
-            report($exception);
+            logger()->error('[DEBUG-register-v2] registration failed', [
+                'type' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
         }
 
         return redirect()->route('login.locale', ['locale' => $locale])->with('status', config("easypsi.locales.$locale.login.success_registered"));
