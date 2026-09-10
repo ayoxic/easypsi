@@ -6,6 +6,10 @@ use Pdo\Mysql;
 $databaseUrl = env('DB_URL') ?: env('DATABASE_URL') ?: env('POSTGRES_URL') ?: env('MYSQL_URL');
 $defaultConnection = env('DB_CONNECTION')
     ?: (env('POSTGRES_URL') || env('DATABASE_URL') ? 'pgsql' : 'sqlite');
+$filterDatabaseOptions = static fn (array $options): array => array_filter(
+    $options,
+    static fn ($value): bool => $value !== null && $value !== ''
+);
 
 return [
 
@@ -63,8 +67,10 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
+            'options' => extension_loaded('pdo_mysql') ? $filterDatabaseOptions([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(env('MYSQL_SSL_VERIFY_SERVER_CERT', false), FILTER_VALIDATE_BOOL),
             ]) : [],
         ],
 
@@ -83,8 +89,10 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
+            'options' => extension_loaded('pdo_mysql') ? $filterDatabaseOptions([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                PDO::ATTR_TIMEOUT => (int) env('DB_CONNECT_TIMEOUT', 5),
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(env('MYSQL_SSL_VERIFY_SERVER_CERT', false), FILTER_VALIDATE_BOOL),
             ]) : [],
         ],
 
