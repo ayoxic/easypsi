@@ -7,9 +7,9 @@
             'nav_how' => 'طريقة العمل',
             'nav_reviews' => 'الآراء',
             'announcement' => 'منصة تعليمية حديثة للتعلم المنظم والتقدم الواضح',
-            'title' => 'EasyPsi - لأن التعليم يستحق أن يكون سهلاً',
-            'subtitle' => 'منصة تعليمية تساعد كل تلميذ على التقدم باختيار الأستاذ المناسب والمادة المناسبة والمسار المناسب.',
-            'description' => 'شروحات واضحة، محتوى منظم، فيديوهات مركزة، تمارين متدرجة واختبارات تساعد على الفهم الجيد والتقدم بثقة.',
+            'title' => 'EasyPsi - تعلم أسهل',
+            'subtitle' => 'اختر الأستاذ والمادة والمسار المناسب لك.',
+            'description' => 'دروس واضحة، تمارين متدرجة واختبارات تساعدك على التقدم بثقة.',
             'primary' => 'ابدأ الآن',
             'register' => 'أنشئ حسابك الآن',
             'secondary' => 'اختر الأستاذ',
@@ -25,7 +25,7 @@
             'point_3' => 'تقدم أوضح للتلميذ وللأسرة',
             'levels_title' => 'مواكبة مناسبة لكل مستوى دراسي',
             'levels_subtitle' => 'كل مستوى يتقدم بإطار واضح، محفز وطموح.',
-            'levels_pills' => ['الجذع المشترك', 'الأولى باك', 'الثانية باك', 'ما بعد الباك'],
+            'levels_pills' => ['الإعدادي', 'الثانوي', 'الباك', 'ما بعد الباك'],
             'journey_title' => 'كيف يتقدم التلميذ',
             'journey_subtitle' => 'مسار بسيط يساعد التلميذ على الفهم والتدرب والتحسن المستمر.',
             'step_1' => 'اختيار المستوى',
@@ -50,9 +50,9 @@
             'nav_how' => 'How it works',
             'nav_reviews' => 'Reviews',
             'announcement' => 'A modern education platform for clear and structured progress',
-            'title' => 'EasyPsi - Because education deserves to be easy',
-            'subtitle' => 'An education platform that helps each student progress by choosing the right teacher, subject, and learning path.',
-            'description' => 'Clear explanations, organized content, focused videos, progressive exercises, and quizzes that build confidence and results.',
+            'title' => 'EasyPsi - Learning made easier',
+            'subtitle' => 'Choose the right teacher, subject, and path.',
+            'description' => 'Clear lessons, progressive exercises, and quizzes that build confidence.',
             'primary' => 'Start now',
             'register' => 'Create your account',
             'secondary' => 'Choose a teacher',
@@ -68,7 +68,7 @@
             'point_3' => 'Clearer progress for students and families',
             'levels_title' => 'Support adapted to each school level',
             'levels_subtitle' => 'Each level moves forward with a clear, motivating, and ambitious framework.',
-            'levels_pills' => ['Common core', '1st bac', '2nd bac', 'Post-bac'],
+            'levels_pills' => ['Middle school', 'High school', 'Bac', 'Post-bac'],
             'journey_title' => 'How the student progresses',
             'journey_subtitle' => 'A simple path that helps the student understand, practice, and improve consistently.',
             'step_1' => 'Choose the level',
@@ -93,9 +93,9 @@
             'nav_how' => 'Fonctionnement',
             'nav_reviews' => 'Avis',
             'announcement' => 'Une plateforme d’éducation moderne pour apprendre avec méthode',
-            'title' => 'EasyPsi - Parce que l’éducation mérite d’être facile',
-            'subtitle' => 'Une plateforme éducative qui aide chaque élève à progresser en choisissant le bon professeur, la bonne matière et le bon parcours.',
-            'description' => 'Des explications claires, un contenu structuré, des vidéos ciblées, des exercices progressifs et des quiz qui renforcent la confiance et les résultats.',
+            'title' => 'EasyPsi - Apprendre plus facilement',
+            'subtitle' => 'Choisissez le bon professeur, la bonne matière et le bon parcours.',
+            'description' => 'Des cours clairs, des exercices progressifs et des quiz pour avancer avec confiance.',
             'primary' => 'Commencer maintenant',
             'register' => 'S’inscrire maintenant',
             'secondary' => 'Choisir le professeur',
@@ -111,7 +111,7 @@
             'point_3' => 'Quiz pour valider les acquis',
             'levels_title' => 'Un accompagnement adapté à chaque niveau scolaire',
             'levels_subtitle' => 'Chaque niveau avance avec un cadre clair, motivant et ambitieux.',
-            'levels_pills' => ['Tronc commun', '1ère bac', '2ème bac', 'Post-bac'],
+            'levels_pills' => ['Collège', 'Lycée', 'Bac', 'Post-bac'],
             'journey_title' => 'Comment l’élève progresse',
             'journey_subtitle' => 'Un parcours simple pour comprendre, s’exercer et progresser avec régularité.',
             'step_1' => 'Choisir son niveau',
@@ -183,18 +183,8 @@
 
             <section class="welcome-masterpiece__hero">
                 <div class="welcome-masterpiece__hero-copy">
-                    <span class="brand-chip">{{ $copy['announcement'] }}</span>
                     <h1>{{ $copy['title'] }}</h1>
                     <h2>{{ $copy['subtitle'] }}</h2>
-
-                    <div class="welcome-masterpiece__hero-description">
-                        <p>{{ $copy['description'] }}</p>
-                    </div>
-
-                    <div class="student-hero-actions">
-                        <a class="primary-btn" href="{{ $registerUrl }}">{{ $copy['primary'] }}</a>
-                        <a class="secondary-btn" href="{{ route('teacher.index.locale', ['locale' => $locale]) }}">{{ $copy['secondary'] }}</a>
-                    </div>
 
                     <div class="welcome-masterpiece__hero-stats">
                         <article class="welcome-masterpiece__hero-stat">
@@ -215,16 +205,22 @@
 
                 <div class="welcome-masterpiece__hero-visual">
                     <div class="welcome-course-preview">
-                        <img src="{{ asset('images/welcome-course-preview.png') }}" alt="EasyPsi course preview" class="welcome-course-preview__image">
+                        <img src="{{ asset('images/welcome-hero-course.png') }}" alt="EasyPsi course preview" class="welcome-course-preview__image">
+                    </div>
+                    <div class="student-hero-actions welcome-course-preview__actions">
+                        <a class="primary-btn" href="{{ $registerUrl }}">{{ $copy['primary'] }}</a>
+                        <a class="secondary-btn" href="{{ route('teacher.index.locale', ['locale' => $locale]) }}">{{ $copy['secondary'] }}</a>
                     </div>
                 </div>
             </section>
 
             <section id="levels" class="welcome-masterpiece__section">
+                <div class="welcome-masterpiece__section-head welcome-scroll-reveal welcome-text-reveal">
+                    <h2>{{ $copy['levels_title'] }}</h2>
+                </div>
+
                 <div class="welcome-editorial welcome-editorial--meeting">
                     <div class="welcome-editorial__copy welcome-editorial__copy--spotlight welcome-scroll-reveal welcome-scroll-reveal--left welcome-text-reveal">
-                        <h2>{{ $copy['levels_title'] }}</h2>
-                        <p>{{ $copy['levels_subtitle'] }}</p>
                         <ul class="welcome-level-pills">
                             @foreach ($copy['levels_pills'] as $pill)
                                 <li class="welcome-level-pills__item">
@@ -246,7 +242,6 @@
             <section id="journey" class="welcome-masterpiece__section">
                 <div class="welcome-masterpiece__section-head welcome-scroll-reveal welcome-text-reveal">
                     <h2>{{ $copy['journey_title'] }}</h2>
-                    <p>{{ $copy['journey_subtitle'] }}</p>
                 </div>
 
                 <div class="welcome-learning-grid">

@@ -1430,8 +1430,8 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 14px;
-  border-radius: 22px;
+  padding: 7px 12px;
+  border-radius: 18px;
   position: sticky;
   top: 14px;
   z-index: 40;
@@ -1448,11 +1448,11 @@ select {
 }
 
 .welcome-masterpiece__brand-logo {
-  width: 46px;
-  height: 46px;
-  padding: 5px;
+  width: 38px;
+  height: 38px;
+  padding: 4px;
   object-fit: contain;
-  border-radius: 18px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 14px 30px rgba(7, 47, 115, 0.12);
 }
@@ -1512,14 +1512,14 @@ select {
 }
 
 .welcome-masterpiece__whatsapp {
-  min-height: 36px;
+  min-height: 32px;
   padding-inline: 12px;
   border-radius: 999px;
   box-shadow: 0 12px 22px rgba(20, 148, 81, 0.2);
 }
 
 .welcome-masterpiece__login {
-  min-height: 34px;
+  min-height: 32px;
   padding-inline: 10px;
   border-radius: 999px;
 }
@@ -1529,7 +1529,7 @@ select {
 }
 
 .welcome-masterpiece__nav-cta {
-  min-height: 38px;
+  min-height: 34px;
   padding-inline: 12px;
   border-radius: 999px;
   flex: 0 0 auto;
@@ -1541,10 +1541,10 @@ select {
   position: relative;
   display: grid;
   gap: 18px;
-  grid-template-columns: minmax(0, 0.96fr) minmax(460px, 1.04fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: center;
-  padding: 28px 30px 48px;
-  min-height: 520px;
+  padding: 22px 24px 26px;
+  min-height: 0;
   overflow: hidden;
   border-radius: 32px;
   background:
@@ -1593,9 +1593,11 @@ select {
 
 .welcome-masterpiece__hero-copy {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   max-width: none;
   width: 100%;
+  align-content: center;
+  justify-items: start;
 }
 
 .welcome-masterpiece__hero-cta-small {
@@ -1608,22 +1610,23 @@ select {
 
 .welcome-masterpiece__hero-copy h1 {
   margin: 0;
-  max-width: 20ch;
+  max-width: 100%;
   color: transparent;
   background: linear-gradient(135deg, #0b3f8a 0%, #0b4ea2 45%, #1a2e62 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  font-size: clamp(1.8rem, 1.45rem + 1.45vw, 3.2rem);
-  line-height: 1.01;
-  letter-spacing: -0.04em;
+  font-size: clamp(2.15rem, 1.65rem + 2vw, 4.25rem);
+  line-height: 1.04;
+  letter-spacing: 0;
   text-shadow: 0 18px 40px rgba(11, 78, 162, 0.08);
 }
 
 .welcome-masterpiece__hero-copy h2 {
   margin: 0;
   color: var(--brand-blue-deep);
-  font-size: clamp(1.12rem, 0.95rem + 0.68vw, 1.7rem);
-  line-height: 1.08;
+  font-size: clamp(1.08rem, 0.95rem + 0.55vw, 1.55rem);
+  line-height: 1.28;
+  max-width: 44ch;
 }
 
 .welcome-masterpiece__hero-highlight {
@@ -1636,7 +1639,7 @@ select {
 }
 
 .welcome-masterpiece__hero-description {
-  max-width: 58ch;
+  max-width: 42ch;
   padding: 12px 14px;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 233, 0.88));
@@ -1757,19 +1760,51 @@ select {
 
 .welcome-masterpiece__hero-visual {
   display: grid;
-  justify-items: end;
+  justify-items: stretch;
+  gap: 14px;
 }
 
 .welcome-course-preview {
-  width: min(100%, 640px);
+  width: 100%;
+  align-self: start;
+  display: grid;
+  align-content: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 176, 46, 0.62);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 247, 226, 0.72));
+  box-shadow:
+    0 20px 42px rgba(7, 47, 115, 0.12),
+    0 0 0 6px rgba(255, 176, 46, 0.08);
+}
+
+.welcome-course-preview__actions {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.welcome-course-preview__actions .primary-btn,
+.welcome-course-preview__actions .secondary-btn {
+  width: 100%;
+  min-height: 58px;
+  justify-content: center;
+  border-radius: 20px;
+  padding-inline: 14px;
+  font-size: 1rem;
 }
 
 .welcome-course-preview__image {
   display: block;
   width: 100%;
-  border: 1px solid transparent;
-  border-radius: 24px;
-  object-fit: cover;
+  height: auto;
+  border: 1px solid rgba(11, 78, 162, 0.08);
+  border-radius: 18px;
+  background: transparent;
 }
 
 .welcome-floating-card {
@@ -2504,12 +2539,12 @@ select {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-height: 68px;
-  padding: 16px 18px;
-  border-radius: 20px;
+  gap: 20px;
+  min-height: 122px;
+  padding: 34px 38px;
+  border-radius: 32px;
   color: var(--brand-blue-deep);
-  font-size: 1.02rem;
+  font-size: 1.48rem;
   font-weight: 800;
   line-height: 1.2;
   background:
@@ -2525,8 +2560,8 @@ select {
 .welcome-level-pills__item::after {
   content: "";
   position: absolute;
-  inset: 8px;
-  border-radius: 15px;
+  inset: 12px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 204, 102, 0.26);
   pointer-events: none;
 }
@@ -2539,13 +2574,13 @@ select {
 
 .welcome-level-pills__dot {
   flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
   background: linear-gradient(135deg, #ffb02e, #0b4ea2);
   box-shadow:
-    0 0 0 7px rgba(255, 176, 46, 0.14),
-    0 6px 14px rgba(11, 78, 162, 0.16);
+    0 0 0 12px rgba(255, 176, 46, 0.14),
+    0 10px 24px rgba(11, 78, 162, 0.17);
 }
 
 .welcome-level-pills__item span:last-child {
@@ -7583,9 +7618,9 @@ body.teacher-course-page {
     top: 8px;
     display: grid;
     grid-template-columns: auto 1.2fr repeat(3, minmax(0, 0.72fr));
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 26px;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 18px;
     overflow: visible;
     align-items: start;
   }
@@ -7597,21 +7632,21 @@ body.teacher-course-page {
   .welcome-masterpiece__brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 0;
     grid-column: 1;
     grid-row: 1;
   }
 
   .welcome-masterpiece__brand-logo {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     padding: 4px;
     border-radius: 12px;
   }
 
   .welcome-masterpiece__brand-copy strong {
-    font-size: 0.92rem;
+    font-size: 0.82rem;
   }
 
   .welcome-masterpiece__actions {
@@ -7657,10 +7692,10 @@ body.teacher-course-page {
   .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
     width: 100%;
     min-width: 0;
-    min-height: 40px;
-    padding-inline: 8px;
-    border-radius: 12px;
-    font-size: 0.68rem;
+    min-height: 34px;
+    padding-inline: 6px;
+    border-radius: 10px;
+    font-size: 0.64rem;
     justify-content: center;
     white-space: nowrap;
   }
@@ -7712,8 +7747,8 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__hero {
-    gap: 12px;
-    padding: 18px 12px 22px;
+    gap: 10px;
+    padding: 12px 10px 14px;
     min-height: 0;
     border-radius: 22px;
     background:
@@ -7732,16 +7767,38 @@ body.teacher-course-page {
     grid-column: 1;
     justify-items: stretch;
     width: 100%;
+    gap: 10px;
+    margin-top: 2px;
   }
 
   .welcome-course-preview {
     width: 100%;
+    padding: 5px;
+    border-radius: 16px;
+    box-shadow:
+      0 12px 24px rgba(7, 47, 115, 0.1),
+      0 0 0 4px rgba(255, 176, 46, 0.07);
   }
 
   .welcome-course-preview__image {
-    aspect-ratio: 2.35 / 1;
-    border-radius: 14px;
+    border-radius: 12px;
     object-position: center;
+  }
+
+  .welcome-course-preview__actions {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 0;
+  }
+
+  .welcome-course-preview__actions .primary-btn,
+  .welcome-course-preview__actions .secondary-btn {
+    min-height: 46px;
+    padding-inline: 8px;
+    border-radius: 14px;
+    font-size: 0.78rem;
+    line-height: 1.15;
   }
 
   .welcome-masterpiece__hero-copy .brand-chip {
@@ -7762,19 +7819,19 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__hero-copy h1 {
-    font-size: clamp(1.85rem, 1.62rem + 0.75vw, 2.3rem);
-    line-height: 0.96;
-    letter-spacing: -0.055em;
+    font-size: clamp(1.34rem, 1.2rem + 0.58vw, 1.62rem);
+    line-height: 1.08;
+    letter-spacing: 0;
     max-width: 100%;
-    text-wrap: balance;
+    text-wrap: pretty;
     text-align: center;
   }
 
   .welcome-masterpiece__hero-copy h2 {
     max-width: 100%;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     line-height: 1.2;
-    letter-spacing: -0.015em;
+    letter-spacing: 0;
     color: #17356e;
     text-align: center;
   }
@@ -7796,11 +7853,6 @@ body.teacher-course-page {
     text-align: center;
   }
 
-  .welcome-masterpiece__hero-copy h1 {
-    max-width: 100%;
-    font-size: clamp(1.95rem, 1.7rem + 0.8vw, 2.45rem);
-  }
-
   .welcome-masterpiece .student-hero-actions {
     display: grid;
     grid-template-columns: 1fr;
@@ -7812,6 +7864,18 @@ body.teacher-course-page {
     min-height: 42px;
     padding-inline: 14px;
     font-size: 0.86rem;
+  }
+
+  .welcome-masterpiece .welcome-course-preview__actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .welcome-masterpiece .welcome-course-preview__actions .primary-btn,
+  .welcome-masterpiece .welcome-course-preview__actions .secondary-btn {
+    min-height: 46px;
+    padding-inline: 8px;
+    font-size: 0.78rem;
   }
 
   .welcome-masterpiece__hero-stats {
@@ -7974,9 +8038,10 @@ body.teacher-course-page {
 
   #reviews .welcome-masterpiece__section-head h2 {
     max-width: 100%;
-    font-size: clamp(1.3rem, 1.14rem + 0.62vw, 1.7rem);
+    font-size: clamp(1.16rem, 1rem + 0.72vw, 1.42rem);
     line-height: 1.1;
-    text-wrap: pretty;
+    white-space: nowrap;
+    text-wrap: nowrap;
   }
 
   #reviews .teacher-directory-grid {
@@ -8100,7 +8165,28 @@ body.teacher-course-page {
   }
 
   .welcome-level-pills {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+
+  .welcome-level-pills__item {
+    min-height: 54px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    gap: 9px;
+    font-size: 0.82rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 232, 0.94)) !important;
+    border: 1px solid rgba(255, 176, 46, 0.34) !important;
+    box-shadow: 0 12px 22px rgba(7, 47, 115, 0.08) !important;
+  }
+
+  .welcome-level-pills__dot {
+    width: 12px;
+    height: 12px;
+    box-shadow:
+      0 0 0 6px rgba(255, 176, 46, 0.16),
+      0 6px 12px rgba(11, 78, 162, 0.14);
   }
 
   .welcome-section-points li {
@@ -8238,6 +8324,39 @@ body.teacher-course-page {
   .welcome-program-card {
     padding: 20px;
     border-radius: 22px;
+  }
+
+  .welcome-masterpiece__section .welcome-learning-grid {
+    gap: 0;
+  }
+
+  .welcome-masterpiece__section .welcome-learning-step {
+    padding: 3px 6px;
+    border-radius: 12px;
+    box-shadow: none;
+  }
+
+  .welcome-masterpiece__section .welcome-learning-step + .welcome-learning-step {
+    margin-top: 4px;
+  }
+
+  .welcome-masterpiece__section .welcome-learning-step__inline {
+    min-height: 42px;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .welcome-masterpiece__section .welcome-learning-step__number {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+
+  .welcome-masterpiece__section .welcome-learning-step__inline h3 {
+    min-height: 34px;
+    padding: 4px 7px;
+    font-size: 0.9rem;
   }
 
   .page-shell {
@@ -8823,6 +8942,165 @@ body.teacher-course-page {
   font-weight: 600;
 }
 
+@media (max-width: 760px) {
+  body.teacher-course-page {
+    background: linear-gradient(180deg, #f8fbff 0%, #fff8dc 48%, #ffffff 100%);
+  }
+
+  body.teacher-course-page .teacher-course-topbar {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) minmax(94px, 0.42fr) 38px;
+    grid-template-areas:
+      "brand premium lang avatar"
+      "pills pills pills pills"
+      "space space space space";
+    gap: 8px;
+    padding: 8px 10px 10px;
+    border-radius: 0 0 18px 18px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 10px 24px rgba(15, 43, 89, 0.1);
+  }
+
+  body.teacher-course-page .teacher-course-topbar > .course-brand {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  body.teacher-course-page .teacher-course-topbar > .course-brand .course-brand-logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  body.teacher-course-page .teacher-course-topbar > .primary-btn {
+    min-height: 40px;
+    border-radius: 16px;
+    padding-inline: 8px;
+    font-size: 0.76rem;
+    line-height: 1.08;
+  }
+
+  body.teacher-course-page .teacher-course-topbar .teacher-course-topbar__pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "subject level";
+    gap: 8px;
+  }
+
+  body.teacher-course-page .teacher-course-topbar .teacher-course-pill-menu__toggle,
+  body.teacher-course-page .teacher-course-topbar .teacher-course-topbar__teacher,
+  body.teacher-course-page .teacher-course-topbar > .secondary-btn,
+  body.teacher-course-page .teacher-course-topbar > .locale-switcher .student-topbar-menu__toggle {
+    min-height: 38px;
+    border-radius: 14px;
+    padding: 6px 10px;
+    box-shadow: 0 8px 18px rgba(20, 50, 95, 0.08);
+  }
+
+  body.teacher-course-page .teacher-course-topbar > .locale-switcher .student-topbar-menu__toggle {
+    padding-inline: 8px;
+    font-size: 0.76rem;
+  }
+
+  body.teacher-course-page .teacher-course-topbar .teacher-course-pill-menu__toggle {
+    background: #ffffff;
+    border-color: rgba(39, 93, 181, 0.18);
+  }
+
+  body.teacher-course-page .teacher-course-topbar .teacher-course-topbar__teacher {
+    display: none;
+  }
+
+  body.teacher-course-page .teacher-course-topbar .teacher-course-pill-menu__eyebrow {
+    font-size: 0.58rem;
+    letter-spacing: 0.05em;
+  }
+
+  body.teacher-course-page .teacher-course-topbar .teacher-course-pill-menu__value {
+    font-size: 0.78rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.teacher-course-page .teacher-course-page-layout {
+    display: grid;
+    gap: 12px;
+    padding: 12px 8px 0;
+  }
+
+  body.teacher-course-page .teacher-course-level-card {
+    border-radius: 22px;
+    border-color: rgba(255, 188, 44, 0.52);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 16px 28px rgba(15, 43, 89, 0.07);
+  }
+
+  body.teacher-course-page .teacher-course-level-card__head {
+    padding: 16px 18px 10px;
+    gap: 4px;
+  }
+
+  body.teacher-course-page .teacher-course-level-card__head h3 {
+    font-size: 0.98rem;
+  }
+
+  body.teacher-course-page .teacher-course-level-card__body {
+    gap: 8px;
+    padding: 0 12px 14px;
+  }
+
+  body.teacher-course-page .teacher-lesson-link {
+    min-height: 54px;
+    border-radius: 18px;
+    padding: 8px 10px;
+  }
+
+  body.teacher-course-page .teacher-parts {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  body.teacher-course-page .teacher-part-link {
+    min-height: 54px;
+    border-radius: 18px;
+  }
+
+  body.teacher-course-page .teacher-course-main-panel__intro {
+    padding: 12px 2px 4px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  body.teacher-course-page .course-hero__pill,
+  body.teacher-course-page .course-hero__locale {
+    min-height: 28px;
+    padding-inline: 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+  }
+
+  body.teacher-course-page .teacher-course-main-panel__intro h1 {
+    margin-top: 8px;
+    font-size: clamp(1.38rem, 1.1rem + 1vw, 1.72rem);
+    line-height: 1.08;
+  }
+
+  body.teacher-course-page .course-hero__meta {
+    margin-top: 8px;
+    gap: 8px;
+    font-size: 0.82rem;
+  }
+
+  body.teacher-course-page .teacher-video-stage {
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 18px 34px rgba(9, 38, 88, 0.14);
+  }
+}
+
 @media (max-width: 1100px) {
   #reviews .teacher-directory-grid {
     display: flex;
@@ -8878,13 +9156,13 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__shell {
-    gap: 56px;
+    gap: 34px;
   }
 
   .welcome-masterpiece__nav {
     gap: 14px;
-    padding: 14px 18px;
-    border-radius: 26px;
+    padding: 8px 14px;
+    border-radius: 20px;
   }
 
   .welcome-masterpiece__brand {
@@ -8892,9 +9170,9 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__brand-logo {
-    width: 54px;
-    height: 54px;
-    padding: 6px;
+    width: 42px;
+    height: 42px;
+    padding: 5px;
   }
 
   .welcome-masterpiece__brand-copy strong {
@@ -8914,54 +9192,54 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__whatsapp {
-    min-height: 40px;
+    min-height: 34px;
     padding-inline: 14px;
   }
 
   .welcome-masterpiece__login {
-    min-height: 38px;
+    min-height: 34px;
     padding-inline: 12px;
   }
 
   .welcome-masterpiece__nav-cta {
-    min-height: 42px;
+    min-height: 36px;
     padding-inline: 14px;
     font-size: 0.9rem;
   }
 
   .welcome-masterpiece__hero {
-    gap: 32px;
-    grid-template-columns: minmax(0, 0.96fr) minmax(460px, 1.04fr);
-    padding: 52px 52px 120px;
-    min-height: 760px;
-    border-radius: 44px;
+    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 32px 38px 38px;
+    min-height: 0;
+    border-radius: 34px;
   }
 
   .welcome-masterpiece__hero-copy {
-    gap: 22px;
+    gap: 18px;
   }
 
   .welcome-masterpiece__hero-copy h1 {
-    font-size: clamp(2.5rem, 1.9rem + 2.25vw, 4.8rem);
+    font-size: clamp(2.8rem, 2.15rem + 2.45vw, 5rem);
   }
 
   .welcome-masterpiece__hero-copy h2 {
-    font-size: clamp(1.75rem, 1.2rem + 1.2vw, 2.6rem);
+    font-size: clamp(1.25rem, 1.02rem + 0.85vw, 1.95rem);
   }
 
   .welcome-masterpiece__hero-description {
-    padding: 22px 24px;
-    border-radius: 24px;
+    padding: 16px 18px;
+    border-radius: 20px;
   }
 
   .welcome-masterpiece__hero-description p {
-    font-size: 1.04rem;
-    line-height: 1.95;
+    font-size: 0.96rem;
+    line-height: 1.7;
   }
 
   .welcome-masterpiece__hero-copy p {
-    font-size: 1.12rem;
-    line-height: 1.95;
+    font-size: 1rem;
+    line-height: 1.7;
   }
 
   .welcome-masterpiece__hero-stats {
@@ -8978,8 +9256,8 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__section {
-    gap: 34px;
-    margin-top: 14px;
+    gap: 24px;
+    margin-top: 6px;
   }
 }
 
