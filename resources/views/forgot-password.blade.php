@@ -39,7 +39,7 @@
                     <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" required>
                 </div>
 
-                @if (config('services.recaptcha.site_key'))
+                @if (config('services.recaptcha.enabled') && config('services.recaptcha.site_key'))
                     <div class="simple-captcha">
                         <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
                     </div>

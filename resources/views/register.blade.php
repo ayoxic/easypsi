@@ -112,7 +112,7 @@
                     <input id="password_confirmation" name="password_confirmation" type="password" required>
                 </div>
 
-                @if (config('services.recaptcha.site_key'))
+                @if (config('services.recaptcha.enabled') && config('services.recaptcha.site_key'))
                     <div class="simple-captcha">
                         <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
                     </div>

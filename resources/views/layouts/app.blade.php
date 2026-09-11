@@ -8,7 +8,7 @@
         <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
         <link rel="apple-touch-icon" href="{{ asset('logo.jpeg') }}">
         <link rel="stylesheet" href="{{ asset('styles.css') }}?v={{ filemtime(public_path('styles.css')) }}">
-        @if (config('services.recaptcha.site_key'))
+        @if (config('services.recaptcha.enabled') && config('services.recaptcha.site_key'))
             <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         @endif
     </head>
