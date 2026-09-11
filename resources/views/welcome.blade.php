@@ -213,6 +213,11 @@
 
                 </div>
 
+                <div class="welcome-masterpiece__hero-visual">
+                    <div class="welcome-course-preview">
+                        <img src="{{ asset('images/welcome-course-preview.png') }}" alt="EasyPsi course preview" class="welcome-course-preview__image">
+                    </div>
+                </div>
             </section>
 
             <section id="levels" class="welcome-masterpiece__section">
@@ -315,4 +320,3 @@
         </div>
     </main>
 @endsection
-

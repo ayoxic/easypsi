@@ -1755,6 +1755,23 @@ select {
   background: linear-gradient(135deg, var(--brand-orange), var(--brand-blue));
 }
 
+.welcome-masterpiece__hero-visual {
+  display: grid;
+  justify-items: end;
+}
+
+.welcome-course-preview {
+  width: min(100%, 640px);
+}
+
+.welcome-course-preview__image {
+  display: block;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 24px;
+  object-fit: cover;
+}
+
 .welcome-floating-card {
   position: absolute;
   bottom: 18px;
@@ -7709,6 +7726,22 @@ body.teacher-course-page {
     gap: 10px;
     text-align: center;
     justify-items: center;
+  }
+
+  .welcome-masterpiece__hero-visual {
+    grid-column: 1;
+    justify-items: stretch;
+    width: 100%;
+  }
+
+  .welcome-course-preview {
+    width: 100%;
+  }
+
+  .welcome-course-preview__image {
+    aspect-ratio: 2.35 / 1;
+    border-radius: 14px;
+    object-position: center;
   }
 
   .welcome-masterpiece__hero-copy .brand-chip {
