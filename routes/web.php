@@ -315,8 +315,8 @@ Route::post('/language', function (Request $request) use ($resolveLocale) {
     return redirect()->to($validated['redirect_to'] ?? url()->previous() ?? route('welcome.locale', ['locale' => $locale]));
 })->name('language.update');
 
-Route::get('/', function () use ($baseViewData) {
-    return redirect()->route('login.locale', ['locale' => 'ar']);
+Route::get('/', function () {
+    return redirect()->route('welcome.locale', ['locale' => 'fr']);
 });
 
 Route::get('/{locale}', function (string $locale) use ($resolveLocale, $baseViewData) {
