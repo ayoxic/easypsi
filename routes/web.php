@@ -42,6 +42,8 @@ $baseViewData = static function (string $locale) use ($locales): array {
     ];
 };
 
+$hidePublishedCourses = static fn (): bool => (bool) env('EASYPSI_HIDE_PUBLISHED_COURSES', env('VERCEL') === '1');
+
 Route::get('/healthz', static fn () => response('ok', 200));
 
 $teacherSubjectOptions = static function (string $locale): array {
@@ -626,7 +628,7 @@ Route::middleware('auth')->group(function () use (
         return back()->with('status', 'password-updated');
     })->name('password.update');
 
-    Route::get('/{locale}/teachers', function (Request $request, string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions, $levelMatrix, $teacherCopy) {
+    Route::get('/{locale}/teachers', function (Request $request, string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions, $levelMatrix, $teacherCopy, $hidePublishedCourses) {
         $locale = $resolveLocale($locale);
         $data = $baseViewData($locale);
         $copy = $teacherCopy($locale);
@@ -639,6 +641,22 @@ Route::middleware('auth')->group(function () use (
         $selectedTrack = (string) $request->query('track');
         $selectedSubject = (string) $request->query('subject');
         $teacherName = trim((string) $request->query('teacher'));
+
+        if ($hidePublishedCourses()) {
+            $data = array_merge($data, [
+                'title' => 'EasyPsi | Teachers',
+                'teacherPageCopy' => $copy,
+                'matrix' => $matrix,
+                'subjectOptions' => $subjectOptions,
+                'teachers' => collect(),
+                'selectedLevel' => $selectedLevel,
+                'selectedTrack' => $selectedTrack,
+                'selectedSubject' => $selectedSubject,
+                'teacherName' => $teacherName,
+            ]);
+
+            return view('teacher-index', $data);
+        }
 
         if ($selectedLevel !== '') {
             $query->forAudience($selectedLevel.($selectedTrack !== '' ? '::'.$selectedTrack : ''));
@@ -685,11 +703,33 @@ Route::middleware('auth')->group(function () use (
         return view('teacher-index', $data);
     })->name('teacher.index.locale');
 
-    Route::get('/{locale}/teachers/{teacher}', function (Request $request, string $locale, User $teacher) use ($resolveLocale, $baseViewData, $teacherCopy, $youtubeEmbedUrl, $studentHasPremiumAccess) {
+    Route::get('/{locale}/teachers/{teacher}', function (Request $request, string $locale, User $teacher) use ($resolveLocale, $baseViewData, $teacherCopy, $youtubeEmbedUrl, $studentHasPremiumAccess, $hidePublishedCourses) {
         abort_unless($teacher->role === 'teacher', 404);
 
         $locale = $resolveLocale($locale);
         $copy = $teacherCopy($locale);
+
+        if ($hidePublishedCourses()) {
+            $data = array_merge($baseViewData($locale), [
+                'title' => 'EasyPsi | '.$teacher->name,
+                'teacherPageCopy' => $copy,
+                'teacherUser' => $teacher,
+                'allLessons' => collect(),
+                'groupedLessons' => collect(),
+                'selectedSubject' => (string) $request->query('subject', ''),
+                'selectedLevel' => (string) $request->query('level', ''),
+                'activeLesson' => null,
+                'activePart' => (string) $request->query('part', 'course'),
+                'activeAsset' => new TeacherLessonAsset(['part' => 'course', 'access_level' => 'free']),
+                'embedUrl' => null,
+                'locked' => false,
+                'isEmptyTeacher' => true,
+                'isEmptyFilter' => false,
+            ]);
+
+            return view('teacher-course', $data);
+        }
+
         $allLessons = TeacherLesson::with(['assets', 'teacher'])
             ->where('teacher_id', $teacher->id)
             ->orderByRaw('sort_order = 0')
