@@ -966,6 +966,24 @@ Route::middleware('auth')->group(function () use (
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
         ]);
 
+        $uploadsDisabledOnline = (bool) env('VERCEL');
+        $skippedOnlineUpload = false;
+        $hasUploadedFile = function ($files) use (&$hasUploadedFile): bool {
+            if ($files instanceof \Illuminate\Http\UploadedFile) {
+                return true;
+            }
+
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    if ($hasUploadedFile($file)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        };
+
         $levelKey = $validated['level'];
         abort_unless(isset($matrix[$levelKey]), 422, 'Niveau invalide.');
         $submittedTracks = array_values(array_unique(array_filter($validated['track'] ?? [])));
@@ -1043,10 +1061,12 @@ Route::middleware('auth')->group(function () use (
                 ];
 
                 $questionFile = data_get($request->file('quiz_question_images', []), $questionIndex);
-                if ($questionFile) {
+                if ($questionFile && ! $uploadsDisabledOnline) {
                     $path = $questionFile->store('teacher-quizzes/questions', 'public');
                     $questionRow['question_image_path'] = $path;
                     $questionRow['question_image_url'] = Storage::disk('public')->url($path);
+                } elseif ($questionFile) {
+                    $skippedOnlineUpload = true;
                 } elseif (! empty($questionRow['question_image_path'])) {
                     $questionRow['question_image_url'] = Storage::disk('public')->url($questionRow['question_image_path']);
                 }
@@ -1058,10 +1078,12 @@ Route::middleware('auth')->group(function () use (
                     ];
 
                     $choiceFile = data_get($request->file('quiz_choice_images', []), $questionIndex.'.'.$choiceIndex);
-                    if ($choiceFile) {
+                    if ($choiceFile && ! $uploadsDisabledOnline) {
                         $path = $choiceFile->store('teacher-quizzes/choices', 'public');
                         $choiceRow['image_path'] = $path;
                         $choiceRow['image_url'] = Storage::disk('public')->url($path);
+                    } elseif ($choiceFile) {
+                        $skippedOnlineUpload = true;
                     } elseif (! empty($choiceRow['image_path'])) {
                         $choiceRow['image_url'] = Storage::disk('public')->url($choiceRow['image_path']);
                     }
@@ -1091,11 +1113,13 @@ Route::middleware('auth')->group(function () use (
 
         $existingAsset = $lesson->assets()->where('part', $validated['part'])->first();
 
-        if ($request->hasFile('support_file')) {
+        if ($request->hasFile('support_file') && ! $uploadsDisabledOnline) {
             if ($existingAsset && filled($existingAsset->support_file_path ?? null)) {
                 Storage::disk('public')->delete($existingAsset->support_file_path);
             }
             $assetData['support_file_path'] = $request->file('support_file')->store('teacher-supports', 'public');
+        } elseif ($request->hasFile('support_file')) {
+            $skippedOnlineUpload = true;
         } elseif ($existingAsset && filled($existingAsset->support_file_path ?? null) && $validated['part'] !== 'quiz') {
             $assetData['support_file_path'] = $existingAsset->support_file_path;
         }
@@ -1105,7 +1129,16 @@ Route::middleware('auth')->group(function () use (
             $assetData
         );
 
-        return redirect()->route('teacher.space.locale', ['locale' => $locale])->with('status', 'Contenu enregistré.');
+        $status = $skippedOnlineUpload || ($uploadsDisabledOnline && (
+            $request->hasFile('support_file')
+            || $hasUploadedFile($request->file('quiz_question_images', []))
+            || $hasUploadedFile($request->file('quiz_choice_images', []))
+        ))
+            ? 'Contenu enregistre. Les fichiers importes ne sont pas conserves sur Vercel pour le moment.'
+            : 'Contenu enregistre.';
+
+        return redirect()->route('teacher.space.locale', ['locale' => $locale])->with('status', $status);
+
     })->middleware('verified')->name('teacher.content.store');
 
     Route::post('/{locale}/teacher-space/content/{asset}/delete', function (Request $request, string $locale, TeacherLessonAsset $asset) use ($resolveLocale) {
