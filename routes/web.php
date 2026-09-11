@@ -42,7 +42,12 @@ $baseViewData = static function (string $locale) use ($locales): array {
     ];
 };
 
-$hidePublishedCourses = static fn (): bool => (bool) env('EASYPSI_HIDE_PUBLISHED_COURSES', env('VERCEL') === '1');
+if (! function_exists('easypsi_hide_published_courses')) {
+    function easypsi_hide_published_courses(): bool
+    {
+        return filter_var(env('EASYPSI_HIDE_PUBLISHED_COURSES', env('VERCEL') === '1'), FILTER_VALIDATE_BOOL);
+    }
+}
 
 Route::get('/healthz', static fn () => response('ok', 200));
 
@@ -628,7 +633,7 @@ Route::middleware('auth')->group(function () use (
         return back()->with('status', 'password-updated');
     })->name('password.update');
 
-    Route::get('/{locale}/teachers', function (Request $request, string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions, $levelMatrix, $teacherCopy, $hidePublishedCourses) {
+    Route::get('/{locale}/teachers', function (Request $request, string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions, $levelMatrix, $teacherCopy) {
         $locale = $resolveLocale($locale);
         $data = $baseViewData($locale);
         $copy = $teacherCopy($locale);
@@ -642,7 +647,7 @@ Route::middleware('auth')->group(function () use (
         $selectedSubject = (string) $request->query('subject');
         $teacherName = trim((string) $request->query('teacher'));
 
-        if ($hidePublishedCourses()) {
+        if (easypsi_hide_published_courses()) {
             $data = array_merge($data, [
                 'title' => 'EasyPsi | Teachers',
                 'teacherPageCopy' => $copy,
@@ -703,13 +708,13 @@ Route::middleware('auth')->group(function () use (
         return view('teacher-index', $data);
     })->name('teacher.index.locale');
 
-    Route::get('/{locale}/teachers/{teacher}', function (Request $request, string $locale, User $teacher) use ($resolveLocale, $baseViewData, $teacherCopy, $youtubeEmbedUrl, $studentHasPremiumAccess, $hidePublishedCourses) {
+    Route::get('/{locale}/teachers/{teacher}', function (Request $request, string $locale, User $teacher) use ($resolveLocale, $baseViewData, $teacherCopy, $youtubeEmbedUrl, $studentHasPremiumAccess) {
         abort_unless($teacher->role === 'teacher', 404);
 
         $locale = $resolveLocale($locale);
         $copy = $teacherCopy($locale);
 
-        if ($hidePublishedCourses()) {
+        if (easypsi_hide_published_courses()) {
             $data = array_merge($baseViewData($locale), [
                 'title' => 'EasyPsi | '.$teacher->name,
                 'teacherPageCopy' => $copy,
