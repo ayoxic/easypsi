@@ -5,7 +5,6 @@
         'ar' => [
             'nav_levels' => 'المستويات',
             'nav_how' => 'طريقة العمل',
-            'nav_courses' => 'الدروس',
             'nav_reviews' => 'الآراء',
             'announcement' => 'منصة تعليمية حديثة للتعلم المنظم والتقدم الواضح',
             'title' => 'EasyPsi - لأن التعليم يستحق أن يكون سهلاً',
@@ -32,8 +31,6 @@
             'step_1' => 'اختيار المستوى',
             'step_2' => 'فهم الدرس',
             'step_3' => 'التدرب والتحقق',
-            'featured_title' => 'أمثلة من الدروس المتاحة',
-            'featured_subtitle' => 'نفس المنهج الدراسي مع عرض واضح للتقدم وتنظيم المحتوى.',
             'reviews_title' => 'ما الذي يبحث عنه التلاميذ والأسر',
             'reviews_subtitle' => 'وضوح، تنظيم، ونتائج أفضل في جو تعليمي مطمئن.',
             'review_1' => 'أحب أن أراجع الدرس بهدوء ثم أنتقل مباشرة إلى التمارين لأتأكد أنني فهمت.',
@@ -51,7 +48,6 @@
         'en' => [
             'nav_levels' => 'Levels',
             'nav_how' => 'How it works',
-            'nav_courses' => 'Courses',
             'nav_reviews' => 'Reviews',
             'announcement' => 'A modern education platform for clear and structured progress',
             'title' => 'EasyPsi - Because education deserves to be easy',
@@ -78,8 +74,6 @@
             'step_1' => 'Choose the level',
             'step_2' => 'Understand the course',
             'step_3' => 'Practice and validate',
-            'featured_title' => 'Examples of available lessons',
-            'featured_subtitle' => 'The same curriculum, with clear progression and organized content.',
             'reviews_title' => 'What students and families are looking for',
             'reviews_subtitle' => 'Clarity, structure, and better results in a reassuring learning environment.',
             'review_1' => 'I like reviewing the lesson calmly, then moving straight to exercises to make sure I understood.',
@@ -97,7 +91,6 @@
         default => [
             'nav_levels' => 'Niveaux',
             'nav_how' => 'Fonctionnement',
-            'nav_courses' => 'Cours',
             'nav_reviews' => 'Avis',
             'announcement' => 'Une plateforme d’éducation moderne pour apprendre avec méthode',
             'title' => 'EasyPsi - Parce que l’éducation mérite d’être facile',
@@ -124,8 +117,6 @@
             'step_1' => 'Choisir son niveau',
             'step_2' => 'Comprendre le cours',
             'step_3' => 'S’exercer et valider',
-            'featured_title' => 'Des exemples de cours disponibles',
-            'featured_subtitle' => 'Le même programme, avec une progression lisible et un contenu bien organisé.',
             'reviews_title' => 'Ce que les élèves et les familles recherchent',
             'reviews_subtitle' => 'De la clarté, de la méthode et de meilleurs résultats dans un cadre rassurant.',
             'review_1' => 'J’aime pouvoir revoir le cours calmement puis passer directement aux exercices pour vérifier si j’ai compris.',
@@ -148,13 +139,6 @@
         ['number' => '03', 'title' => $copy['step_3']],
     ];
 
-    $featuredCourses = [
-        ['label' => 'Tronc commun', 'title' => 'La gravitation universelle', 'teacher' => 'EasyPsi', 'track' => 'Tronc commun', 'rating' => '4.9/5', 'focus' => 'Bases solides', 'progress' => 0],
-        ['label' => '1ère bac', 'title' => 'Rotation d’un solide autour d’un axe fixe', 'teacher' => 'EasyPsi', 'track' => '1ère bac', 'rating' => '4.8/5', 'focus' => 'Sciences expérimentales', 'progress' => 0],
-        ['label' => '2ème bac', 'title' => 'Ondes mécaniques progressives', 'teacher' => 'EasyPsi', 'track' => '2ème bac', 'rating' => '4.9/5', 'focus' => 'Sciences maths', 'progress' => 0],
-        ['label' => 'Post-bac', 'title' => 'Stratégie ENSAM', 'teacher' => 'EasyPsi', 'track' => 'Post-bac', 'rating' => '4.7/5', 'focus' => 'Préparation concours', 'progress' => 0],
-    ];
-
     $testimonials = [
         ['text' => $copy['review_1'], 'author' => 'Salma', 'meta' => $copy['student_meta']],
         ['text' => $copy['review_2'], 'author' => 'Yassine', 'meta' => $copy['student_meta_boy']],
@@ -173,7 +157,7 @@
 @endphp
 
 @section('content')
-    <main class="page-shell welcome-masterpiece">
+    <main class="page-shell welcome-masterpiece welcome-masterpiece--borderless">
         <div class="welcome-masterpiece__shell">
             <header class="glass-card welcome-masterpiece__nav">
                 <a class="welcome-masterpiece__brand" href="{{ route('welcome.locale', ['locale' => $locale]) }}">
@@ -186,7 +170,6 @@
                 <nav class="welcome-masterpiece__menu">
                     <a href="#levels">{{ $copy['nav_levels'] }}</a>
                     <a href="#journey">{{ $copy['nav_how'] }}</a>
-                    <a href="#featured">{{ $copy['nav_courses'] }}</a>
                     <a href="#reviews">{{ $copy['nav_reviews'] }}</a>
                 </nav>
 
@@ -230,12 +213,6 @@
 
                 </div>
 
-                <div class="welcome-masterpiece__hero-visual">
-                    <div class="welcome-course-preview">
-                        <img src="{{ asset('images/welcome-course-preview.png') }}" alt="EasyPsi course preview" class="welcome-course-preview__image">
-                        <div class="welcome-course-preview__glow"></div>
-                    </div>
-                </div>
             </section>
 
             <section id="levels" class="welcome-masterpiece__section">
@@ -279,53 +256,6 @@
                 </div>
             </section>
 
-            <section id="featured" class="welcome-masterpiece__section">
-                <div class="student-page-head">
-                    <h2>
-                        @if ($locale === 'ar')
-                            دروس مختارة لتوضيح تقدم التلميذ
-                        @elseif ($locale === 'en')
-                            Selected lessons to illustrate student progress
-                        @else
-                            Des cours choisis pour illustrer la progression de l’élève
-                        @endif
-                    </h2>
-                </div>
-
-                <div class="teacher-directory-grid">
-                    @foreach ($featuredCourses as $course)
-                        <article class="glass-card payment-plan-card">
-                            <div class="lesson-card-banner {{ $loop->even ? 'lesson-card-banner--orange' : ($loop->iteration === 4 ? 'lesson-card-banner--gold' : '') }}">
-                                <div class="lesson-card-banner__content">
-                                    <span class="lesson-card-banner__badge">{{ $course['label'] }}</span>
-                                    <strong>{{ $course['rating'] }}</strong>
-                                    <p>{{ $course['focus'] }}</p>
-                                </div>
-                            </div>
-                            <h3>{{ $course['title'] }}</h3>
-                            <p>{{ $course['track'] }}</p>
-                            <div class="lesson-progress">
-                                <div class="lesson-progress__meta">
-                                    <span>{{ $copy['progression'] }}</span>
-                                    <strong>{{ $course['progress'] }}%</strong>
-                                </div>
-                                <div class="lesson-progress__track">
-                                    <span style="width: {{ $course['progress'] }}%;"></span>
-                                </div>
-                            </div>
-                            <a class="secondary-btn" href="{{ route('teacher.index.locale', ['locale' => $locale]) }}">
-                                @if ($locale === 'ar')
-                                    الوصول إلى الدرس
-                                @elseif ($locale === 'en')
-                                    Access the course
-                                @else
-                                    Accéder au cours
-                                @endif
-                            </a>
-                        </article>
-                    @endforeach
-                </div>
-            </section>
             <section id="reviews" class="welcome-masterpiece__section">
                 <div class="welcome-masterpiece__section-head welcome-scroll-reveal welcome-text-reveal">
                     <h2>{{ $copy['reviews_title'] }}</h2>

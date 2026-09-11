@@ -1755,55 +1755,6 @@ select {
   background: linear-gradient(135deg, var(--brand-orange), var(--brand-blue));
 }
 
-.welcome-masterpiece__hero-visual {
-  display: grid;
-  justify-items: end;
-}
-
-.welcome-course-preview {
-  position: relative;
-  overflow: hidden;
-  padding: 8px;
-  width: min(100%, 640px);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 88% 14%, rgba(255, 193, 65, 0.28), transparent 22%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 228, 0.96));
-  box-shadow: 0 34px 70px rgba(7, 47, 115, 0.2);
-  border: 1px solid rgba(11, 78, 162, 0.08);
-}
-
-.welcome-course-preview::after {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  border-radius: 16px;
-  border: 1px solid rgba(11, 78, 162, 0.08);
-  pointer-events: none;
-}
-
-.welcome-course-preview__image {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  border-radius: 14px;
-  object-fit: cover;
-  box-shadow: 0 20px 48px rgba(7, 47, 115, 0.12);
-}
-
-.welcome-course-preview__glow {
-  position: absolute;
-  right: 3%;
-  bottom: 5%;
-  width: 38%;
-  height: 28%;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 196, 69, 0.34), transparent 70%);
-  filter: blur(10px);
-  pointer-events: none;
-}
-
 .welcome-floating-card {
   position: absolute;
   bottom: 18px;
@@ -2371,112 +2322,6 @@ select {
   font-weight: 800;
   line-height: 1.2;
   white-space: nowrap;
-}
-
-#featured .student-page-head {
-  display: grid;
-  gap: 14px;
-  margin-bottom: 28px;
-}
-
-#featured .student-page-head h2 {
-  margin: 0;
-  color: transparent;
-  background: linear-gradient(135deg, #0b3f8a 0%, #133f90 52%, #f08b10 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  font-size: clamp(2.4rem, 1.55rem + 1.7vw, 4rem);
-  line-height: 1.06;
-}
-
-#featured .student-page-head p {
-  margin: 0;
-  max-width: 64ch;
-  color: #7e8da8;
-  font-size: 1.02rem;
-  line-height: 1.8;
-}
-
-#featured .teacher-directory-grid {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 22px;
-  overflow-x: auto;
-  align-items: stretch;
-  padding-bottom: 10px;
-}
-
-#featured .payment-plan-card {
-  flex: 0 0 calc((100% - 66px) / 4);
-  min-width: calc((100% - 66px) / 4);
-  gap: 18px;
-  padding: 24px;
-  border-radius: 30px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 244, 0.95));
-  border: 1px solid rgba(210, 226, 247, 0.7);
-  box-shadow: 0 24px 52px rgba(12, 44, 96, 0.08);
-}
-
-#featured .payment-plan-card h3 {
-  margin: 0;
-  color: #1e4585;
-  font-size: 1.15rem;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-#featured .payment-plan-card > p {
-  margin: -4px 0 0;
-  color: #7f8ba0;
-  font-size: 0.95rem;
-}
-
-#featured .lesson-card-banner {
-  min-height: 240px;
-  padding: 22px;
-  border-radius: 28px;
-  display: flex;
-  align-items: flex-end;
-}
-
-#featured .lesson-card-banner__content {
-  display: grid;
-  gap: 10px;
-  color: #ffffff;
-}
-
-#featured .lesson-card-banner__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  padding: 8px 16px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
-
-#featured .lesson-card-banner__content strong {
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-
-#featured .lesson-card-banner__content p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 0.98rem;
-  line-height: 1.4;
-}
-
-#featured .payment-plan-card .secondary-btn {
-  width: 100%;
-  justify-content: center;
-  min-height: 60px;
-  border-radius: 20px;
-  font-size: 1rem;
-  font-weight: 800;
 }
 
 .welcome-editorial {
@@ -7624,14 +7469,6 @@ body.teacher-course-page {
     grid-template-columns: 1fr;
   }
 
-  #featured .teacher-directory-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    overflow: visible;
-    padding-bottom: 0;
-  }
-
   .welcome-kpi-row,
   .welcome-showcase__mini-grid {
     grid-template-columns: 1fr;
@@ -7646,10 +7483,6 @@ body.teacher-course-page {
 
   .hero-content {
     margin-top: 34px;
-  }
-
-  .welcome-course-preview__image {
-    min-height: 320px;
   }
 
   .student-course-layout {
@@ -7952,33 +7785,6 @@ body.teacher-course-page {
     display: none;
   }
 
-  .welcome-masterpiece__hero-visual {
-    display: grid;
-    grid-column: 1;
-    justify-items: stretch;
-    margin-top: 6px;
-    width: 100%;
-  }
-
-  .welcome-masterpiece__hero-visual .welcome-course-preview {
-    width: 100%;
-    max-width: none;
-    padding: 6px;
-    border-radius: 20px;
-  }
-
-  .welcome-masterpiece__hero-visual .welcome-course-preview::after {
-    inset: 6px;
-    border-radius: 14px;
-  }
-
-  .welcome-masterpiece__hero-visual .welcome-course-preview__image {
-    width: 100%;
-    aspect-ratio: 2.35 / 1;
-    border-radius: 14px;
-    object-position: center;
-  }
-
   .welcome-section-points--levels {
     grid-template-columns: 1fr;
   }
@@ -8133,11 +7939,6 @@ body.teacher-course-page {
     text-align: left;
   }
 
-  #featured .student-page-head {
-    margin-bottom: 12px;
-  }
-
-  #featured .student-page-head h2,
   #reviews .welcome-masterpiece__section-head h2 {
     max-width: 100%;
     font-size: clamp(1.3rem, 1.14rem + 0.62vw, 1.7rem);
@@ -8145,108 +7946,25 @@ body.teacher-course-page {
     text-wrap: pretty;
   }
 
-  #featured .teacher-directory-grid,
   #reviews .teacher-directory-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
-  #featured .payment-plan-card,
   #reviews .payment-plan-card {
     padding: 12px;
     border-radius: 18px;
   }
 
-  #featured .payment-plan-card {
-    display: grid;
-    grid-template-rows: 74px auto auto 1fr auto;
-    align-content: start;
-    aspect-ratio: 1 / 1;
-    padding: 10px;
-    border-radius: 14px;
-    border: 1.5px solid rgba(255, 163, 24, 0.72);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 248, 238, 0.96));
-    box-shadow:
-      0 14px 28px rgba(255, 176, 46, 0.16),
-      0 6px 14px rgba(12, 44, 96, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.94);
-    gap: 6px;
-    overflow: hidden;
-  }
-
-  #featured .lesson-card-banner {
-    min-height: 74px;
-    border-radius: 4px;
-    box-shadow: none;
-    padding: 0;
-  }
-
-  #featured .lesson-card-banner__content {
-    padding: 6px 8px;
-    gap: 3px;
-  }
-
-  #featured .payment-plan-card h3,
   #reviews .payment-plan-card h3 {
     font-size: 0.94rem;
     line-height: 1.15;
   }
 
-  #featured .payment-plan-card h3 {
-    margin: 0;
-    font-size: 0.88rem;
-    line-height: 1.08;
-    text-align: center;
-    text-wrap: balance;
-  }
-
-  #featured .payment-plan-card > p,
   #reviews .payment-plan-card > p,
   #reviews .payment-plan-card > span {
     font-size: 0.8rem;
     line-height: 1.4;
-  }
-
-  #featured .payment-plan-card > p {
-    margin: 0;
-    font-size: 0.74rem;
-    line-height: 1.15;
-    text-align: center;
-  }
-
-  #featured .lesson-card-banner__badge {
-    font-size: 0.66rem;
-    padding: 4px 7px;
-  }
-
-  #featured .lesson-card-banner__content strong {
-    font-size: 0.84rem;
-  }
-
-  #featured .lesson-card-banner__content p {
-    font-size: 0.7rem;
-    line-height: 1.1;
-  }
-
-  #featured .lesson-progress {
-    align-self: end;
-    gap: 4px;
-  }
-
-  #featured .lesson-progress__meta {
-    font-size: 0.68rem;
-    line-height: 1.1;
-  }
-
-  #featured .payment-plan-card .secondary-btn {
-    align-self: end;
-    width: 100%;
-    min-height: 28px;
-    padding-inline: 8px;
-    font-size: 0.68rem;
-    line-height: 1;
-    border-radius: 999px;
-    white-space: nowrap;
   }
 
   .welcome-masterpiece__footer-grid {
@@ -8388,10 +8106,6 @@ body.teacher-course-page {
   .welcome-teacher-gallery__wave,
   .welcome-teacher-gallery__orb {
     display: none;
-  }
-
-  .welcome-course-preview__image {
-    min-height: 240px;
   }
 
   .welcome-homepage {
@@ -9020,30 +8734,6 @@ body.teacher-course-page {
   }
 }
 
-#featured .lesson-card-banner {
-  background: linear-gradient(135deg, #173c79 0%, #2157a5 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
-#featured .lesson-card-banner--orange {
-  background: linear-gradient(135deg, #ffbf4d 0%, #ff9f0a 100%);
-}
-
-#featured .lesson-card-banner--gold {
-  background: linear-gradient(135deg, #fff4c8 0%, #ffe08a 100%);
-}
-
-#featured .lesson-card-banner--gold .lesson-card-banner__content,
-#featured .lesson-card-banner--gold .lesson-card-banner__badge,
-#featured .lesson-card-banner--gold .lesson-card-banner__content strong,
-#featured .lesson-card-banner--gold .lesson-card-banner__content p {
-  color: #1f3f7b;
-}
-
-#featured .lesson-card-banner--gold .lesson-card-banner__badge {
-  background: rgba(31, 63, 123, 0.08);
-}
-
 .welcome-learning-step__inline {
   min-height: 92px;
   padding: 18px 20px;
@@ -9254,25 +8944,70 @@ body.teacher-course-page {
     font-size: 1.45rem;
   }
 
-  .welcome-course-preview {
-    padding: 14px;
-    border-radius: 36px;
-  }
-
-  .welcome-course-preview::after {
-    inset: 14px;
-    border-radius: 28px;
-  }
-
-  .welcome-course-preview__image {
-    border-radius: 24px;
-  }
-
   .welcome-masterpiece__section {
     gap: 34px;
     margin-top: 14px;
   }
 }
+
+.welcome-masterpiece--borderless .glass-card,
+.welcome-masterpiece--borderless .welcome-masterpiece__nav,
+.welcome-masterpiece--borderless .welcome-masterpiece__hero,
+.welcome-masterpiece--borderless .welcome-masterpiece__hero-description,
+.welcome-masterpiece--borderless .welcome-masterpiece__hero-stat,
+.welcome-masterpiece--borderless .welcome-masterpiece__section,
+.welcome-masterpiece--borderless .welcome-editorial__copy--spotlight,
+.welcome-masterpiece--borderless .welcome-editorial__image-shell,
+.welcome-masterpiece--borderless .welcome-level-pills__item,
+.welcome-masterpiece--borderless .welcome-learning-step,
+.welcome-masterpiece--borderless .payment-plan-card,
+.welcome-masterpiece--borderless .welcome-masterpiece__footer,
+.welcome-masterpiece--borderless .welcome-masterpiece__footer-brand {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.welcome-masterpiece--borderless .primary-btn,
+.welcome-masterpiece--borderless .secondary-btn,
+.welcome-masterpiece--borderless .whatsapp-btn,
+.welcome-masterpiece--borderless .brand-chip,
+.welcome-masterpiece--borderless .locale-pill {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.welcome-masterpiece--borderless .glass-card::before,
+.welcome-masterpiece--borderless .glass-card::after,
+.welcome-masterpiece--borderless .welcome-masterpiece__nav::before,
+.welcome-masterpiece--borderless .welcome-masterpiece__nav::after,
+.welcome-masterpiece--borderless .welcome-masterpiece__hero::before,
+.welcome-masterpiece--borderless .welcome-masterpiece__hero::after,
+.welcome-masterpiece--borderless .welcome-masterpiece__section::before,
+.welcome-masterpiece--borderless .welcome-masterpiece__section::after,
+.welcome-masterpiece--borderless .welcome-editorial__copy--spotlight::before,
+.welcome-masterpiece--borderless .welcome-editorial__copy--spotlight::after,
+.welcome-masterpiece--borderless .welcome-editorial__image-shell::before,
+.welcome-masterpiece--borderless .welcome-editorial__image-shell::after,
+.welcome-masterpiece--borderless .payment-plan-card::before,
+.welcome-masterpiece--borderless .payment-plan-card::after,
+.welcome-masterpiece--borderless .welcome-masterpiece__footer::before,
+.welcome-masterpiece--borderless .welcome-masterpiece__footer::after {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.welcome-masterpiece--borderless .welcome-level-pills__item,
+.welcome-masterpiece--borderless .welcome-level-pills__item:hover,
+.welcome-masterpiece--borderless .welcome-level-pills__item::before,
+.welcome-masterpiece--borderless .welcome-level-pills__item::after,
+.welcome-masterpiece--borderless .welcome-editorial--meeting .welcome-level-pills__item,
+.welcome-masterpiece--borderless .welcome-editorial--meeting .welcome-level-pills__item::after {
+  border-color: transparent !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
+}
+
 
 .teacher-course-empty {
   padding: 40px 32px;
