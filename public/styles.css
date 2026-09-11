@@ -1755,6 +1755,55 @@ select {
   background: linear-gradient(135deg, var(--brand-orange), var(--brand-blue));
 }
 
+.welcome-masterpiece__hero-visual {
+  display: grid;
+  justify-items: end;
+}
+
+.welcome-course-preview {
+  position: relative;
+  overflow: hidden;
+  padding: 14px;
+  width: min(100%, 640px);
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at 88% 14%, rgba(255, 193, 65, 0.28), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 228, 0.96));
+  box-shadow: 0 34px 70px rgba(7, 47, 115, 0.2);
+  border: 1px solid transparent;
+}
+
+.welcome-course-preview::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  border-radius: 28px;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+
+.welcome-course-preview__image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  border-radius: 24px;
+  object-fit: cover;
+  box-shadow: 0 20px 48px rgba(7, 47, 115, 0.12);
+}
+
+.welcome-course-preview__glow {
+  position: absolute;
+  right: 3%;
+  bottom: 5%;
+  width: 38%;
+  height: 28%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 196, 69, 0.34), transparent 70%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
 .welcome-floating-card {
   position: absolute;
   bottom: 18px;
@@ -9008,6 +9057,34 @@ body.teacher-course-page {
   box-shadow: none !important;
 }
 
+@media (max-width: 760px) {
+  .welcome-masterpiece__hero-visual {
+    display: grid;
+    grid-column: 1;
+    justify-items: stretch;
+    margin-top: 6px;
+    width: 100%;
+  }
+
+  .welcome-masterpiece__hero-visual .welcome-course-preview {
+    width: 100%;
+    max-width: none;
+    padding: 6px;
+    border-radius: 20px;
+  }
+
+  .welcome-masterpiece__hero-visual .welcome-course-preview::after {
+    inset: 6px;
+    border-radius: 14px;
+  }
+
+  .welcome-masterpiece__hero-visual .welcome-course-preview__image {
+    width: 100%;
+    aspect-ratio: 2.35 / 1;
+    border-radius: 14px;
+    object-position: center;
+  }
+}
 
 .teacher-course-empty {
   padding: 40px 32px;
