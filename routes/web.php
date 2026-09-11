@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\QueryException;
@@ -543,6 +542,27 @@ Route::post('/{locale}/logout', function (Request $request, string $locale) use 
     return redirect()->route('welcome.locale', ['locale' => $locale]);
 })->middleware('auth')->name('logout.locale');
 
+Route::get('/{locale}/verify-email/{id}/{hash}', function (Request $request, string $locale, string $id, string $hash) use ($resolveLocale) {
+    $locale = $resolveLocale($locale);
+    $user = User::findOrFail($id);
+
+    abort_unless(hash_equals((string) $hash, sha1($user->getEmailForVerification())), 403);
+
+    if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
+        event(new Verified($user));
+    }
+
+    Auth::login($user);
+    $request->session()->regenerate();
+
+    return match ($user->role) {
+        'teacher' => redirect("/{$locale}/teacher-space")->with('status', 'verified'),
+        'admin' => redirect("/{$locale}/admin")->with('status', 'verified'),
+        default => redirect("/{$locale}/teachers")->with('status', 'verified'),
+    };
+})->middleware('signed')->name('verification.verify');
+
 Route::middleware('auth')->group(function () use (
     $resolveLocale,
     $baseViewData,
@@ -556,13 +576,6 @@ Route::middleware('auth')->group(function () use (
         $locale = $resolveLocale($locale);
         return view('verify-email', $baseViewData($locale));
     })->name('verification.notice');
-
-    Route::get('/{locale}/verify-email/{id}/{hash}', function (EmailVerificationRequest $request, string $locale) {
-        $request->fulfill();
-        event(new Verified($request->user()));
-
-        return redirect()->route('teacher.index.locale', ['locale' => $locale])->with('status', 'verified');
-    })->middleware('signed')->name('verification.verify');
 
     Route::post('/{locale}/email/verification-notification', function (Request $request, string $locale) {
         $request->user()->sendEmailVerificationNotification();
