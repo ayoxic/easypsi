@@ -2,24 +2,21 @@
     $menuProfile = match ($locale) {
         'ar' => [
             'profile' => 'الملف الشخصي',
-            'payment' => 'الدفع',
+            'payment' => 'سجل الدفع',
             'logout' => 'تسجيل الخروج',
             'languages' => 'اللغات',
-            'premium' => 'الانتقال إلى بريميوم',
         ],
         'en' => [
             'profile' => 'Profile',
-            'payment' => 'Payment',
+            'payment' => 'Payment history',
             'logout' => 'Logout',
             'languages' => 'Languages',
-            'premium' => 'Upgrade to Premium',
         ],
         default => [
             'profile' => 'Profile',
-            'payment' => 'Paiement',
+            'payment' => 'Historique des paiements',
             'logout' => 'Déconnexion',
             'languages' => 'Langues',
-            'premium' => 'Passer au Premium',
         ],
     };
 @endphp
@@ -34,10 +31,6 @@
     @endif
 
     <div class="student-topbar-spacer"></div>
-
-    @if (($showPremiumButton ?? true) === true)
-        <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $menuProfile['premium'] }}</a>
-    @endif
 
     @include('partials.locale-switcher', [
         'routeName' => $routeName ?? 'teacher.index.locale',
@@ -57,7 +50,7 @@
 
             <div class="student-topbar-menu__dropdown student-topbar-menu__dropdown--profile" data-topbar-menu-dropdown>
                 <a class="student-topbar-menu__option" href="{{ route('student.profile.locale', ['locale' => $locale]) }}">{{ $menuProfile['profile'] }}</a>
-                <a class="student-topbar-menu__option" href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $menuProfile['payment'] }}</a>
+                <a class="student-topbar-menu__option" href="{{ route('payment.history.locale', ['locale' => $locale]) }}">{{ $menuProfile['payment'] }}</a>
                 <form method="POST" action="{{ route('logout.locale', ['locale' => $locale]) }}">
                     @csrf
                     <button class="student-topbar-menu__option student-topbar-menu__button" type="submit">{{ $menuProfile['logout'] }}</button>

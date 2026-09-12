@@ -5,22 +5,24 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Notifications\Auth\ResetPasswordNotification;
 use App\Notifications\Auth\VerifyEmailNotification;
+use App\Notifications\TeacherVerificationAdminNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class EasyPsiPagesTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_root_redirects_to_arabic_login(): void
+    public function test_root_redirects_to_french_homepage(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect('/ar/login');
+        $response->assertRedirect('/fr');
     }
 
     public function test_arabic_login_page_loads(): void
@@ -248,6 +250,170 @@ class EasyPsiPagesTest extends TestCase
         $response->assertSessionHasErrors([
             'password' => 'The Password field must contain at least 8 characters and 1 number.',
         ]);
+    }
+
+    public function test_admin_is_notified_after_teacher_verifies_email(): void
+    {
+        Notification::fake();
+        config(['easypsi.admin_email' => 'admin@easypsi.test']);
+
+        $teacher = User::factory()->unverified()->create([
+            'name' => 'Future Teacher',
+            'email' => 'future-teacher@example.com',
+            'phone' => '0612345678',
+            'role' => 'teacher',
+            'preferred_locale' => 'fr',
+        ]);
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addMinutes(60),
+            [
+                'locale' => 'fr',
+                'id' => $teacher->id,
+                'hash' => sha1($teacher->getEmailForVerification()),
+            ]
+        );
+
+        $response = $this->get($verificationUrl);
+
+        $response->assertRedirect('/fr/teacher-pending');
+        $this->assertNotNull($teacher->fresh()->email_verified_at);
+
+        Notification::assertSentOnDemand(TeacherVerificationAdminNotification::class, function ($notification, array $channels, object $notifiable) {
+            return in_array('mail', $channels, true)
+                && ($notifiable->routes['mail'] ?? null) === 'admin@easypsi.test';
+        });
+    }
+
+    public function test_pending_teacher_cannot_access_teacher_space_until_admin_verifies_them(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'email_verified_at' => now(),
+            'teacher_verified_at' => null,
+        ]);
+
+        $this->actingAs($teacher);
+
+        $this->get('/fr/teacher-space')->assertRedirect('/fr/teacher-pending');
+        $this->get('/fr/teacher-pending')->assertOk();
+    }
+
+    public function test_admin_can_verify_pending_teacher(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'email_verified_at' => now(),
+            'teacher_verified_at' => null,
+        ]);
+
+        $this->actingAs($admin);
+
+        $response = $this->post("/fr/admin/teachers/{$teacher->id}/verify");
+
+        $response->assertRedirect('/fr/admin');
+        $this->assertNotNull($teacher->fresh()->teacher_verified_at);
+    }
+
+    public function test_verified_teacher_refreshing_pending_page_goes_to_teacher_space(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'email_verified_at' => now(),
+            'teacher_verified_at' => now(),
+        ]);
+
+        $this->actingAs($teacher);
+
+        $this->get('/fr/teacher-pending')->assertRedirect('/fr/teacher-space');
+    }
+
+    public function test_payment_history_page_loads_for_verified_user(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'email_verified_at' => now(),
+            'teacher_verified_at' => now(),
+        ]);
+
+        $student = User::factory()->create([
+            'role' => 'student',
+            'email_verified_at' => now(),
+            'subscription_tier' => 'premium',
+            'premium_duration' => '1_month',
+            'premium_level_key' => '1ere-bac::science-math',
+            'premium_teacher_id' => $teacher->id,
+            'premium_subject_key' => 'physics',
+            'premium_expires_at' => now()->addMonth(),
+        ]);
+
+        $this->actingAs($student);
+
+        $response = $this->get('/fr/payment-history');
+
+        $response->assertOk();
+        $response->assertSee('Historique des paiements');
+        $response->assertSee(route('teacher.index.locale', ['locale' => 'fr']), false);
+        $response->assertSee('Premium');
+        $response->assertSee('1ere bac / science math');
+        $response->assertSee($teacher->name);
+        $response->assertSee('Physique');
+    }
+
+    public function test_payment_page_from_premium_video_shows_matching_level_pack_only(): void
+    {
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'email_verified_at' => now(),
+            'teacher_verified_at' => now(),
+        ]);
+
+        $response = $this->get("/fr/payment?teacher={$teacher->id}&subject=physics&level=2eme-bac::science-physique");
+
+        $response->assertOk();
+        $response->assertSee('Tarifs autres niveaux');
+        $response->assertDontSee('Tarifs tronc commun');
+        $response->assertSee(str_replace(' ', '+', $teacher->name), false);
+    }
+
+    public function test_admin_subscription_update_saves_teacher_and_subject_scope(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email_verified_at' => now(),
+        ]);
+        $teacher = User::factory()->create([
+            'role' => 'teacher',
+            'email_verified_at' => now(),
+            'teacher_verified_at' => now(),
+        ]);
+        $student = User::factory()->create([
+            'role' => 'student',
+            'email_verified_at' => now(),
+        ]);
+
+        $this->actingAs($admin);
+
+        $response = $this->post("/fr/admin/users/{$student->id}/subscription", [
+            'subscription_tier' => 'premium',
+            'premium_duration' => '1_month',
+            'premium_level_key' => '2eme-bac::science-physique',
+            'premium_teacher_id' => $teacher->id,
+            'premium_subject_key' => 'physics',
+        ]);
+
+        $response->assertRedirect('/fr/admin');
+
+        $student->refresh();
+        $this->assertSame('premium', $student->subscription_tier);
+        $this->assertSame($teacher->id, $student->premium_teacher_id);
+        $this->assertSame('physics', $student->premium_subject_key);
     }
 
     public function test_admin_user_is_redirected_to_admin_page_after_login(): void

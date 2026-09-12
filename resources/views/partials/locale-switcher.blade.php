@@ -28,14 +28,23 @@
         </div>
     </nav>
 @else
-    <nav class="locale-switcher" aria-label="Language switcher">
+    <nav class="locale-switcher locale-switcher--compact" aria-label="Language switcher" data-locale-dropdown>
+        <button class="locale-pill locale-pill--toggle is-active" type="button" aria-expanded="false" data-locale-dropdown-toggle>
+            {{ $availableLocales[$locale]['short'] ?? strtoupper($locale) }}
+            <span class="locale-pill__chevron" aria-hidden="true"></span>
+        </button>
+
+        <div class="locale-switcher__dropdown" hidden data-locale-dropdown-menu>
         @foreach ($availableLocales as $switchLocale => $switchCopy)
-            <a
-                class="locale-pill {{ $locale === $switchLocale ? 'is-active' : '' }}"
-                href="{{ route($routeName, array_merge(request()->route()?->parameters() ?? [], ['locale' => $switchLocale], request()->query())) }}"
-            >
-                {{ $switchCopy['short'] }}
-            </a>
+            @if ($locale !== $switchLocale)
+                <a
+                    class="locale-switcher__option"
+                    href="{{ route($routeName, array_merge(request()->route()?->parameters() ?? [], ['locale' => $switchLocale], request()->query())) }}"
+                >
+                    {{ $switchCopy['short'] }}
+                </a>
+            @endif
         @endforeach
+        </div>
     </nav>
 @endif

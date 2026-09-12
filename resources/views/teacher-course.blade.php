@@ -12,21 +12,21 @@
         'ar' => [
             'teacher_space' => 'فضاء الأستاذ',
             'profile' => 'الملف الشخصي',
-            'payment' => 'الدفع',
+            'payment' => 'سجل الدفع',
             'logout' => 'تسجيل الخروج',
             'languages' => 'اللغات',
         ],
         'en' => [
             'teacher_space' => 'Teacher space',
             'profile' => 'Profil',
-            'payment' => 'Payment',
+            'payment' => 'Payment history',
             'logout' => 'Logout',
             'languages' => 'Languages',
         ],
         default => [
             'teacher_space' => 'Espace professeur',
             'profile' => 'Profil',
-            'payment' => 'Paiement',
+            'payment' => 'Historique des paiements',
             'logout' => 'Déconnexion',
             'languages' => 'Langues',
         ],
@@ -109,8 +109,6 @@
                 @endif
             @endauth
 
-            <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale, 'back' => request()->fullUrl()]) }}">{{ $teacherPageCopy['go_premium'] }}</a>
-
             @include('partials.locale-switcher', [
                 'routeName' => 'teacher.course.locale',
                 'localeMenuStyle' => 'dropdown',
@@ -129,7 +127,7 @@
 
                     <div class="student-topbar-menu__dropdown student-topbar-menu__dropdown--profile" data-topbar-menu-dropdown>
                         <a class="student-topbar-menu__option" href="{{ route('student.profile.locale', ['locale' => $locale]) }}">{{ $teacherCourseNav['profile'] }}</a>
-                        <a class="student-topbar-menu__option" href="{{ route('payment.locale', ['locale' => $locale, 'back' => request()->fullUrl()]) }}">{{ $teacherCourseNav['payment'] }}</a>
+                        <a class="student-topbar-menu__option" href="{{ route('payment.history.locale', ['locale' => $locale]) }}">{{ $teacherCourseNav['payment'] }}</a>
                         <form method="POST" action="{{ route('logout.locale', ['locale' => $locale]) }}">
                             @csrf
                             <button class="student-topbar-menu__option student-topbar-menu__button" type="submit">{{ $teacherCourseNav['logout'] }}</button>
@@ -225,7 +223,7 @@
                         <span class="teacher-premium-stage__tag">PREMIUM</span>
                         <h2>{{ $teacherPageCopy['premium_locked'] }}</h2>
                         <p>{{ $locale === 'ar' ? 'يمكنك تصفح صفحة الأستاذ، لكن فتح هذا الجزء يتطلب اشتراكاً بريميوم للمستوى المناسب.' : ($locale === 'en' ? 'You can browse the teacher page, but opening this section requires premium access for the matching level.' : 'Vous pouvez consulter la page du professeur, mais l’ouverture de cette partie demande un accès premium pour le niveau correspondant.') }}</p>
-                        <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale, 'back' => request()->fullUrl()]) }}">{{ $teacherPageCopy['go_premium'] }}</a>
+                        <a class="primary-btn" href="{{ route('payment.locale', ['locale' => $locale, 'back' => request()->fullUrl(), 'teacher' => $teacherUser->id, 'subject' => $activeLesson->subject_key, 'level' => $activeLesson->level_key]) }}">{{ $teacherPageCopy['go_premium'] }}</a>
                     </section>
                 @elseif (($activeAsset->part ?? '') === 'quiz')
                     <section class="teacher-quiz-stage glass-card">

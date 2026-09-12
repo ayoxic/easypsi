@@ -46,7 +46,18 @@
 
     $labels = [$paymentCopy['monthly'], $paymentCopy['semiannual'], $paymentCopy['annual']];
 
-    $displayPlanGroups = collect($plans)->map(function (array $groupPlans, string $groupKey) use ($labels) {
+    $requestedLevel = (string) ($paymentContext['level'] ?? '');
+    $targetPlanGroup = '';
+
+    if ($requestedLevel !== '') {
+        $targetPlanGroup = str_contains($requestedLevel, 'tronc') || str_contains($requestedLevel, 'college')
+            ? 'tronc_commun'
+            : 'autres_niveaux';
+    }
+
+    $displayPlanGroups = collect($plans)
+        ->when($targetPlanGroup !== '', fn ($groups) => $groups->only($targetPlanGroup))
+        ->map(function (array $groupPlans, string $groupKey) use ($labels) {
         return collect($groupPlans)->values()->map(function (array $plan, int $index) use ($labels): array {
             return array_merge($plan, [
                 'display_name' => $labels[$index] ?? $plan['name'],
@@ -96,6 +107,11 @@
             });
         });
     }
+
+    $paymentContextParts = collect($paymentContext ?? [])
+        ->filter(fn ($value) => filled($value))
+        ->map(fn ($value, $key) => ucfirst($key).': '.$value)
+        ->implode(' | ');
 @endphp
 
 @section('content')
@@ -129,7 +145,7 @@
                                 <p class="payment-plan-card__copy">{{ $plan['description'] }}</p>
                                 <a
                                     class="primary-btn"
-                                    href="{{ $whatsappBase }}?text={{ urlencode('Bonjour EasyPsi, je choisis la formule '.$plan['display_name'].' - '.$plan['price'].' ('.$paymentCopy[$groupKey].')') }}"
+                                    href="{{ $whatsappBase }}?text={{ urlencode('Bonjour EasyPsi, je choisis la formule '.$plan['display_name'].' - '.$plan['price'].' ('.$paymentCopy[$groupKey].')'.($paymentContextParts !== '' ? ' | '.$paymentContextParts : '')) }}"
                                     target="_blank"
                                     rel="noreferrer"
                                 >

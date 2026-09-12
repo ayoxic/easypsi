@@ -2,6 +2,7 @@
 
 return [
     'whatsapp_number' => '212645532991',
+    'admin_email' => env('EASYPSI_ADMIN_EMAIL', env('MAIL_FROM_ADDRESS', 'hello@example.com')),
     'support_label' => 'Équipe EasyPsi',
     'plans' => [
         'tronc_commun' => [

@@ -70,7 +70,6 @@
 @section('content')
     <main class="student-shell teacher-directory-shell">
         @include('partials.student-topbar', [
-            'topbarTitle' => $labels['title'],
             'routeName' => 'teacher.index.locale',
         ])
 

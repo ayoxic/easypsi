@@ -50,6 +50,9 @@ class DatabaseSeeder extends Seeder
             'preferred_locale' => 'fr',
             'password' => Hash::make('Teacher12345!'),
         ]);
-        $teacherUser->forceFill(['email_verified_at' => now()])->save();
+        $teacherUser->forceFill([
+            'email_verified_at' => now(),
+            'teacher_verified_at' => now(),
+        ])->save();
     }
 }

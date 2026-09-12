@@ -186,21 +186,6 @@
                     <h1>{{ $copy['title'] }}</h1>
                     <h2>{{ $copy['subtitle'] }}</h2>
 
-                    <div class="welcome-masterpiece__hero-stats">
-                        <article class="welcome-masterpiece__hero-stat">
-                            <strong>{{ $copy['stat_1_value'] }}</strong>
-                            <span>{{ $copy['stat_1_label'] }}</span>
-                        </article>
-                        <article class="welcome-masterpiece__hero-stat">
-                            <strong>{{ $copy['stat_2_value'] }}</strong>
-                            <span>{{ $copy['stat_2_label'] }}</span>
-                        </article>
-                        <article class="welcome-masterpiece__hero-stat">
-                            <strong>{{ $copy['stat_3_value'] }}</strong>
-                            <span>{{ $copy['stat_3_label'] }}</span>
-                        </article>
-                    </div>
-
                 </div>
 
                 <div class="welcome-masterpiece__hero-visual">
@@ -288,7 +273,6 @@
                             <li><a href="{{ route('welcome.locale', ['locale' => $locale]) }}">{{ $locale === 'ar' ? 'الرئيسية' : ($locale === 'en' ? 'Home' : 'Accueil') }}</a></li>
                             <li><a href="{{ route('login.locale', ['locale' => $locale]) }}">{{ $locale === 'ar' ? 'تسجيل الدخول' : ($locale === 'en' ? 'Login' : 'Connexion') }}</a></li>
                             <li><a href="{{ route('register.locale', ['locale' => $locale]) }}">{{ $locale === 'ar' ? 'إنشاء حساب' : ($locale === 'en' ? 'Create account' : 'Créer un compte') }}</a></li>
-                            <li><a href="{{ route('payment.locale', ['locale' => $locale]) }}">{{ $locale === 'ar' ? 'بريميوم' : 'Premium' }}</a></li>
                         </ul>
                     </div>
 

@@ -3,6 +3,7 @@
 use App\Models\TeacherLesson;
 use App\Models\TeacherLessonAsset;
 use App\Models\User;
+use App\Notifications\TeacherVerificationAdminNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -12,6 +13,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -234,7 +236,7 @@ $studentHasPremiumAccess = static function (?User $user, TeacherLesson $lesson):
         return false;
     }
 
-    return blank($user->premium_level_key) || $user->hasActivePremiumForLevel($lesson->level_key);
+    return $user->hasActivePremiumForLesson($lesson);
 };
 
 $teacherCopy = static function (string $locale): array {
@@ -308,6 +310,10 @@ $teacherCopy = static function (string $locale): array {
     };
 };
 
+$teacherIsApproved = static function (User $user): bool {
+    return $user->role !== 'teacher' || $user->teacher_verified_at !== null;
+};
+
 Route::post('/language', function (Request $request) use ($resolveLocale) {
     $validated = $request->validate([
         'locale' => ['required', 'string'],
@@ -333,9 +339,16 @@ Route::get('/{locale}', function (string $locale) use ($resolveLocale, $baseView
     return view('welcome', $data);
 })->name('welcome.locale');
 
-Route::get('/{locale}/payment', function (string $locale) use ($resolveLocale, $baseViewData) {
+Route::get('/{locale}/payment', function (string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions) {
     $locale = $resolveLocale($locale);
     $data = $baseViewData($locale);
+    $teacher = filled(request('teacher')) ? User::where('role', 'teacher')->find(request('teacher')) : null;
+    $subjectOptions = $teacherSubjectOptions($locale);
+    $data['paymentContext'] = [
+        'teacher' => $teacher?->name,
+        'subject' => $subjectOptions[(string) request('subject')] ?? request('subject'),
+        'level' => request('level'),
+    ];
 
     return view('payment', $data);
 })->name('payment.locale');
@@ -400,7 +413,9 @@ Route::middleware('guest')->group(function () use ($resolveLocale, $baseViewData
         $role = Auth::user()?->role;
 
         return match ($role) {
-            'teacher' => redirect("/{$locale}/teacher-space"),
+            'teacher' => Auth::user()?->teacher_verified_at
+                ? redirect("/{$locale}/teacher-space")
+                : redirect()->route('teacher.pending.locale', ['locale' => $locale]),
             'admin' => redirect("/{$locale}/admin"),
             default => redirect("/{$locale}/teachers"),
         };
@@ -544,20 +559,32 @@ Route::post('/{locale}/logout', function (Request $request, string $locale) use 
 
 Route::get('/{locale}/verify-email/{id}/{hash}', function (Request $request, string $locale, string $id, string $hash) use ($resolveLocale) {
     $locale = $resolveLocale($locale);
-    $user = User::findOrFail($id);
+    $user = User::find($id);
+
+    if (! $user) {
+        return redirect()->route('login.locale', ['locale' => $locale])
+            ->withErrors(['email' => 'Ce lien de vérification est ancien ou invalide. Veuillez vous connecter pour demander un nouveau lien.']);
+    }
 
     abort_unless(hash_equals((string) $hash, sha1($user->getEmailForVerification())), 403);
 
     if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
         $user->markEmailAsVerified();
         event(new Verified($user));
+
+        if ($user->role === 'teacher' && filled(config('easypsi.admin_email'))) {
+            Notification::route('mail', config('easypsi.admin_email'))
+                ->notify(new TeacherVerificationAdminNotification($user));
+        }
     }
 
     Auth::login($user);
     $request->session()->regenerate();
 
     return match ($user->role) {
-        'teacher' => redirect("/{$locale}/teacher-space")->with('status', 'verified'),
+        'teacher' => $user->teacher_verified_at
+            ? redirect("/{$locale}/teacher-space")->with('status', 'verified')
+            : redirect()->route('teacher.pending.locale', ['locale' => $locale])->with('status', 'verified'),
         'admin' => redirect("/{$locale}/admin")->with('status', 'verified'),
         default => redirect("/{$locale}/teachers")->with('status', 'verified'),
     };
@@ -572,6 +599,18 @@ Route::middleware('auth')->group(function () use (
     $youtubeEmbedUrl,
     $studentHasPremiumAccess
 ) {
+    Route::get('/{locale}/teacher-pending', function (Request $request, string $locale) use ($resolveLocale, $baseViewData) {
+        $locale = $resolveLocale($locale);
+
+        abort_unless($request->user()->role === 'teacher', 404);
+
+        if ($request->user()->teacher_verified_at !== null) {
+            return redirect()->route('teacher.space.locale', ['locale' => $locale]);
+        }
+
+        return view('teacher-pending', $baseViewData($locale));
+    })->middleware('verified')->name('teacher.pending.locale');
+
     Route::get('/{locale}/verify-email', function (string $locale) use ($resolveLocale, $baseViewData) {
         $locale = $resolveLocale($locale);
         return view('verify-email', $baseViewData($locale));
@@ -589,6 +628,14 @@ Route::middleware('auth')->group(function () use (
 
         return view('student-profile', $data);
     })->middleware('verified')->name('student.profile.locale');
+
+    Route::get('/{locale}/payment-history', function (Request $request, string $locale) use ($resolveLocale, $baseViewData) {
+        $locale = $resolveLocale($locale);
+        $data = $baseViewData($locale);
+        $data['user'] = $request->user();
+
+        return view('payment-history', $data);
+    })->middleware('verified')->name('payment.history.locale');
 
     Route::patch('/profile', function (Request $request) {
         $user = $request->user();
@@ -920,7 +967,10 @@ Route::middleware('auth')->group(function () use (
 
     Route::get('/{locale}/teacher-space', function (Request $request, string $locale) use ($resolveLocale, $baseViewData, $teacherSubjectOptions, $levelMatrix, $teacherCopy) {
         abort_unless(in_array($request->user()->role, ['teacher', 'admin'], true), 403);
-    $locale = $resolveLocale($locale);
+        if ($request->user()->role === 'teacher' && $request->user()->teacher_verified_at === null) {
+            return redirect()->route('teacher.pending.locale', ['locale' => $resolveLocale($locale)]);
+        }
+        $locale = $resolveLocale($locale);
         $matrix = $levelMatrix($locale);
         $subjectOptions = $teacherSubjectOptions($locale);
         $teacher = $request->user()->role === 'teacher' ? $request->user() : User::where('role', 'teacher')->first();
@@ -945,6 +995,9 @@ Route::middleware('auth')->group(function () use (
 
     Route::post('/{locale}/teacher-space/content', function (Request $request, string $locale) use ($resolveLocale, $teacherSubjectOptions, $levelMatrix) {
         abort_unless(in_array($request->user()->role, ['teacher', 'admin'], true), 403);
+        if ($request->user()->role === 'teacher' && $request->user()->teacher_verified_at === null) {
+            return redirect()->route('teacher.pending.locale', ['locale' => $resolveLocale($locale)]);
+        }
         $locale = $resolveLocale($locale);
         $subjectOptions = $teacherSubjectOptions($locale);
         $matrix = $levelMatrix($locale);
@@ -1143,6 +1196,9 @@ Route::middleware('auth')->group(function () use (
 
     Route::post('/{locale}/teacher-space/content/{asset}/delete', function (Request $request, string $locale, TeacherLessonAsset $asset) use ($resolveLocale) {
         abort_unless(in_array($request->user()->role, ['teacher', 'admin'], true), 403);
+        if ($request->user()->role === 'teacher' && $request->user()->teacher_verified_at === null) {
+            return redirect()->route('teacher.pending.locale', ['locale' => $resolveLocale($locale)]);
+        }
         $locale = $resolveLocale($locale);
         if (filled($asset->support_file_path ?? null)) {
             Storage::disk('public')->delete($asset->support_file_path);
@@ -1178,15 +1234,42 @@ Route::middleware('auth')->group(function () use (
             ->map(fn ($label, $key) => ['key' => $key, 'label' => $label])
             ->values()
             ->all();
+        $teacherOptions = User::query()
+            ->where('role', 'teacher')
+            ->whereNotNull('teacher_verified_at')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $subjectOptions = TeacherLesson::query()
+            ->select('subject_key', 'subject_label')
+            ->distinct()
+            ->orderBy('subject_label')
+            ->get()
+            ->map(fn (TeacherLesson $lesson): array => [
+                'key' => $lesson->subject_key,
+                'label' => $lesson->subject_label,
+            ])
+            ->values()
+            ->all();
 
         return view('admin', array_merge($baseViewData($locale), [
             'users' => $users->orderBy('name')->limit(10)->get(),
+            'pendingTeachers' => User::where('role', 'teacher')
+                ->whereNotNull('email_verified_at')
+                ->whereNull('teacher_verified_at')
+                ->orderBy('name')
+                ->get(),
             'studentSearch' => $search,
             'adminStats' => [
                 'students' => User::where('role', 'student')->count(),
                 'premium' => User::where('role', 'student')->where('subscription_tier', 'premium')->count(),
+                'pending_teachers' => User::where('role', 'teacher')
+                    ->whereNotNull('email_verified_at')
+                    ->whereNull('teacher_verified_at')
+                    ->count(),
             ],
             'levelOptions' => $levelOptions,
+            'teacherOptions' => $teacherOptions,
+            'subjectOptions' => $subjectOptions,
             'todayDate' => now()->format('Y-m-d'),
         ]));
     })->middleware('verified')->name('admin.locale');
@@ -1201,11 +1284,21 @@ Route::middleware('auth')->group(function () use (
             'subscription_tier' => ['required', 'in:free,premium'],
             'premium_duration' => ['nullable', 'in:1_month,6_months,1_year'],
             'premium_level_key' => ['nullable', 'string', 'max:255'],
+            'premium_teacher_id' => ['nullable', 'integer', 'exists:users,id'],
+            'premium_subject_key' => ['nullable', 'string', 'max:255'],
             'student_search' => ['nullable', 'string'],
         ]);
 
+        if (($validated['subscription_tier'] === 'premium')
+            && filled($validated['premium_teacher_id'] ?? null)
+            && ! User::where('id', $validated['premium_teacher_id'])->where('role', 'teacher')->whereNotNull('teacher_verified_at')->exists()) {
+            return back()->withErrors(['premium_teacher_id' => 'Veuillez choisir un professeur valide.'])->withInput();
+        }
+
         $user->subscription_tier = $validated['subscription_tier'];
         $user->premium_level_key = $validated['subscription_tier'] === 'premium' ? ($validated['premium_level_key'] ?? null) : null;
+        $user->premium_teacher_id = $validated['subscription_tier'] === 'premium' ? ($validated['premium_teacher_id'] ?? null) : null;
+        $user->premium_subject_key = $validated['subscription_tier'] === 'premium' ? ($validated['premium_subject_key'] ?? null) : null;
         $user->premium_duration = $validated['subscription_tier'] === 'premium' ? ($validated['premium_duration'] ?? null) : null;
         $user->premium_granted_at = $validated['subscription_tier'] === 'premium' ? now() : null;
         $user->premium_expires_at = match ($validated['premium_duration'] ?? null) {
@@ -1218,4 +1311,18 @@ Route::middleware('auth')->group(function () use (
 
         return redirect()->route('admin.locale', ['locale' => $locale, 'student_search' => $validated['student_search'] ?? null])->with('status', 'Abonnement mis à jour.');
     })->middleware('verified')->name('admin.users.subscription.update');
+
+    Route::post('/{locale}/admin/teachers/{user}/verify', function (Request $request, string $locale, User $user) use ($resolveLocale) {
+        $locale = $resolveLocale($locale);
+        if ($request->user()->role !== 'admin') {
+            return redirect()->route('course.locale', ['locale' => $locale])
+                ->withErrors(['email' => 'Acces reserve aux administrateurs.']);
+        }
+
+        abort_unless($user->role === 'teacher', 404);
+
+        $user->forceFill(['teacher_verified_at' => now()])->save();
+
+        return redirect()->route('admin.locale', ['locale' => $locale])->with('status', 'Professeur vérifié.');
+    })->middleware('verified')->name('admin.teachers.verify');
 });

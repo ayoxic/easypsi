@@ -200,6 +200,56 @@ document.addEventListener("click", (event) => {
   });
 });
 
+const localeDropdowns = document.querySelectorAll("[data-locale-dropdown]");
+
+const closeLocaleDropdown = (dropdown) => {
+  const toggle = dropdown.querySelector("[data-locale-dropdown-toggle]");
+  const menu = dropdown.querySelector("[data-locale-dropdown-menu]");
+
+  dropdown.classList.remove("is-open");
+
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", "false");
+  }
+
+  if (menu) {
+    menu.setAttribute("hidden", "");
+  }
+};
+
+localeDropdowns.forEach((dropdown) => {
+  const toggle = dropdown.querySelector("[data-locale-dropdown-toggle]");
+  const menu = dropdown.querySelector("[data-locale-dropdown-menu]");
+
+  if (!toggle || !menu) {
+    return;
+  }
+
+  toggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isOpen = dropdown.classList.contains("is-open");
+    localeDropdowns.forEach((item) => closeLocaleDropdown(item));
+
+    if (!isOpen) {
+      dropdown.classList.add("is-open");
+      toggle.setAttribute("aria-expanded", "true");
+      menu.removeAttribute("hidden");
+    }
+  });
+});
+
+document.addEventListener("click", (event) => {
+  localeDropdowns.forEach((dropdown) => {
+    if (dropdown.contains(event.target)) {
+      return;
+    }
+
+    closeLocaleDropdown(dropdown);
+  });
+});
+
 const lessonAccordionItems = document.querySelectorAll("[data-lesson-accordion-item]");
 
 lessonAccordionItems.forEach((item) => {
@@ -1501,12 +1551,16 @@ subscriptionForms.forEach((form) => {
   const tierSelect = form.querySelector("[data-subscription-tier]");
   const durationField = form.querySelector("[data-premium-duration-field]");
   const levelField = form.querySelector("[data-premium-level-field]");
+  const teacherField = form.querySelector("[data-premium-teacher-field]");
+  const subjectField = form.querySelector("[data-premium-subject-field]");
   const durationSelect = form.querySelector("[data-subscription-duration]");
   const levelSelect = form.querySelector("[data-subscription-level]");
+  const teacherSelect = form.querySelector("[name='premium_teacher_id']");
+  const subjectSelect = form.querySelector("[name='premium_subject_key']");
   const previewDate = form.querySelector("[data-subscription-preview-date]");
   const todayValue = form.getAttribute("data-today");
 
-  if (!tierSelect || !durationField || !levelField || !durationSelect || !levelSelect || !previewDate || !todayValue) {
+  if (!tierSelect || !durationField || !levelField || !teacherField || !subjectField || !durationSelect || !levelSelect || !teacherSelect || !subjectSelect || !previewDate || !todayValue) {
     return;
   }
 
@@ -1549,12 +1603,18 @@ subscriptionForms.forEach((form) => {
 
     durationField.hidden = !isPremium;
     levelField.hidden = !isPremium;
+    teacherField.hidden = !isPremium;
+    subjectField.hidden = !isPremium;
     durationSelect.disabled = !isPremium;
     levelSelect.disabled = !isPremium;
+    teacherSelect.disabled = !isPremium;
+    subjectSelect.disabled = !isPremium;
 
     if (!isPremium) {
       durationSelect.value = "";
       levelSelect.value = "";
+      teacherSelect.value = "";
+      subjectSelect.value = "";
     }
 
     computeEndDate();

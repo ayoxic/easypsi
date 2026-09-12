@@ -33,6 +33,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'premium_expires_at',
         'premium_duration',
         'premium_level_key',
+        'premium_teacher_id',
+        'premium_subject_key',
+        'teacher_verified_at',
         'password',
     ];
 
@@ -55,6 +58,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'teacher_verified_at' => 'datetime',
             'premium_granted_at' => 'datetime',
             'premium_expires_at' => 'datetime',
             'password' => 'hashed',
@@ -79,6 +83,19 @@ class User extends Authenticatable implements MustVerifyEmail
         return filled($this->premium_level_key) && \App\Support\LevelAudience::matches($levelKey, $this->premium_level_key);
     }
 
+    public function hasActivePremiumForLesson(TeacherLesson $lesson): bool
+    {
+        if (! $this->hasActivePremiumForLevel($lesson->level_key)) {
+            return false;
+        }
+
+        if (filled($this->premium_teacher_id) && (int) $this->premium_teacher_id !== (int) $lesson->teacher_id) {
+            return false;
+        }
+
+        return blank($this->premium_subject_key) || $this->premium_subject_key === $lesson->subject_key;
+    }
+
     public function teacherLessons(): HasMany
     {
         return $this->hasMany(TeacherLesson::class, 'teacher_id');
@@ -87,6 +104,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isTeacher(): bool
     {
         return $this->role === 'teacher';
+    }
+
+    public function isVerifiedTeacher(): bool
+    {
+        return $this->role === 'teacher' && $this->teacher_verified_at !== null;
     }
 
     public function sendPasswordResetNotification($token): void

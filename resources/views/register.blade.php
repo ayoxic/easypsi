@@ -7,22 +7,10 @@
         'en' => 'Account type',
         default => 'Type de compte',
     };
-    $teacherAccessCopy = match ($locale) {
-        'ar' => [
-            'badge' => 'فضاء الأستاذ',
-            'title' => 'هل لديك حساب أستاذ؟',
-            'cta' => 'تسجيل دخول الأستاذ',
-        ],
-        'en' => [
-            'badge' => 'Teacher space',
-            'title' => 'Do you already have a teacher account?',
-            'cta' => 'Teacher sign in',
-        ],
-        default => [
-            'badge' => 'Espace professeur',
-            'title' => 'Vous avez déjà un compte professeur ?',
-            'cta' => 'Connexion professeur',
-        ],
+    $existingAccountLabel = match ($locale) {
+        'ar' => 'لدي حساب بالفعل',
+        'en' => 'I already have an account',
+        default => 'J’ai déjà un compte',
     };
 @endphp
 
@@ -40,21 +28,9 @@
             <header class="simple-login-header">
                 <h1>{{ $registerCopy['register_title'] }}</h1>
                 <p>
-                    <a href="{{ route('login.locale', ['locale' => $locale]) }}">{{ $registerCopy['submit'] }}</a>
+                    <a href="{{ route('login.locale', ['locale' => $locale]) }}">{{ $existingAccountLabel }}</a>
                 </p>
             </header>
-
-            <section class="teacher-access-card" aria-label="{{ $teacherAccessCopy['badge'] }}">
-                <span class="teacher-access-card__badge">{{ $teacherAccessCopy['badge'] }}</span>
-                <div class="teacher-access-card__content">
-                    <div>
-                        <h2>{{ $teacherAccessCopy['title'] }}</h2>
-                    </div>
-                    <a class="teacher-access-card__link" href="{{ route('login.locale', ['locale' => $locale]) }}">
-                        {{ $teacherAccessCopy['cta'] }}
-                    </a>
-                </div>
-            </section>
 
             @if ($errors->any())
                 <div class="form-errors">

@@ -7,6 +7,7 @@
             'subtitle' => 'هذه الصفحة مخصصة لمتابعة حسابات الطلاب وتفعيل الاشتراكات فقط.',
             'students' => 'الطلاب',
             'premium' => 'بريميوم النشط',
+            'pending_teachers' => 'أساتذة في الانتظار',
             'directory' => 'صفحة الأساتذة',
             'search_student' => 'ابحث عن طالب بالاسم أو البريد أو الهاتف',
             'search' => 'بحث',
@@ -19,6 +20,8 @@
             'duration_6_months' => '6 أشهر',
             'duration_1_year' => 'سنة واحدة',
             'level_scope' => 'المستوى المسموح',
+            'teacher_scope' => 'الأستاذ المسموح',
+            'subject_scope' => 'المادة المسموحة',
             'computed_end' => 'تاريخ النهاية المحسوب',
             'today_base' => 'يبدأ الحساب من اليوم',
             'not_set' => 'غير محدد',
@@ -28,12 +31,16 @@
             'no_students' => 'لا يوجد طلاب حالياً',
             'status' => 'الحالة',
             'phone' => 'الهاتف',
+            'teachers_waiting' => 'أساتذة ينتظرون التحقق عبر واتساب',
+            'verify_teacher' => 'تحقق من الأستاذ',
+            'no_pending_teachers' => 'لا يوجد أساتذة ينتظرون التحقق.',
         ],
         'en' => [
             'title' => 'Student and subscription management',
             'subtitle' => 'This page is only for monitoring students and managing subscriptions.',
             'students' => 'Students',
             'premium' => 'Active premium',
+            'pending_teachers' => 'Pending teachers',
             'directory' => 'Teachers page',
             'search_student' => 'Search a student by name, email, or phone',
             'search' => 'Search',
@@ -46,6 +53,8 @@
             'duration_6_months' => '6 months',
             'duration_1_year' => '1 year',
             'level_scope' => 'Allowed level',
+            'teacher_scope' => 'Allowed teacher',
+            'subject_scope' => 'Allowed subject',
             'computed_end' => 'Calculated end date',
             'today_base' => 'Calculated from today',
             'not_set' => 'Not set',
@@ -55,12 +64,16 @@
             'no_students' => 'No students found',
             'status' => 'Status',
             'phone' => 'Phone',
+            'teachers_waiting' => 'Teachers waiting for WhatsApp verification',
+            'verify_teacher' => 'Verify teacher',
+            'no_pending_teachers' => 'No teachers are waiting for verification.',
         ],
         default => [
             'title' => 'Gestion des étudiants et des abonnements',
             'subtitle' => 'Cette page sert uniquement à suivre les étudiants et gérer les abonnements.',
             'students' => 'Étudiants',
             'premium' => 'Premium actifs',
+            'pending_teachers' => 'Professeurs en attente',
             'directory' => 'Page des professeurs',
             'search_student' => 'Rechercher un étudiant par nom, email ou téléphone',
             'search' => 'Rechercher',
@@ -73,6 +86,8 @@
             'duration_6_months' => '6 mois',
             'duration_1_year' => '1 an',
             'level_scope' => 'Niveau autorisé',
+            'teacher_scope' => 'Professeur autorisé',
+            'subject_scope' => 'Matière autorisée',
             'computed_end' => 'Date de fin calculée',
             'today_base' => 'Calculée à partir d’aujourd’hui',
             'not_set' => 'Non défini',
@@ -82,6 +97,9 @@
             'no_students' => 'Aucun étudiant trouvé',
             'status' => 'Statut',
             'phone' => 'Téléphone',
+            'teachers_waiting' => 'Professeurs à vérifier par WhatsApp',
+            'verify_teacher' => 'Vérifier le professeur',
+            'no_pending_teachers' => 'Aucun professeur en attente de vérification.',
         ],
     };
 
@@ -137,6 +155,10 @@
                     {{ $text['premium'] }}
                     <strong>{{ $adminStats['premium'] }}</strong>
                 </div>
+                <div class="stat-card">
+                    {{ $text['pending_teachers'] }}
+                    <strong>{{ $adminStats['pending_teachers'] }}</strong>
+                </div>
             </div>
         </section>
 
@@ -155,6 +177,40 @@
         <section class="admin-grid admin-grid--dashboard">
             <article class="admin-panel admin-panel--full">
                 <div class="admin-panel-heading admin-panel-heading--accounts">
+                    <span class="admin-section-chip">{{ $text['pending_teachers'] }}</span>
+                    <span class="admin-section-chip">WhatsApp</span>
+                    <h2 class="panel-title">{{ $text['teachers_waiting'] }}</h2>
+                </div>
+
+                <div class="admin-account-list">
+                    @forelse ($pendingTeachers as $teacher)
+                        <article class="admin-account-card">
+                            <div class="admin-account-card__summary">
+                                <div class="admin-account-card__identity">
+                                    <strong>{{ $teacher->name }}</strong>
+                                    <span>{{ $teacher->email }}</span>
+                                    <span>{{ $text['phone'] }} : {{ $teacher->phone ?: '-' }}</span>
+                                </div>
+
+                                <form method="POST" action="{{ route('admin.teachers.verify', ['locale' => $locale, 'user' => $teacher]) }}">
+                                    @csrf
+                                    <button class="primary-btn" type="submit">{{ $text['verify_teacher'] }}</button>
+                                </form>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="admin-row admin-row-content">
+                            <span>{{ $text['no_pending_teachers'] }}</span>
+                            <span>-</span>
+                            <span>-</span>
+                            <span class="ghost-pill">-</span>
+                        </div>
+                    @endforelse
+                </div>
+            </article>
+
+            <article class="admin-panel admin-panel--full">
+                <div class="admin-panel-heading admin-panel-heading--accounts">
                     <span class="admin-section-chip">{{ $text['students'] }}</span>
                     <span class="admin-section-chip">users</span>
                     <h2 class="panel-title">{{ $text['title'] }}</h2>
@@ -169,9 +225,14 @@
                     @forelse ($users as $user)
                         @php
                             $currentLevelLabel = $levelLabelMap[$user->premium_level_key] ?? $text['not_set'];
+                            $currentTeacherLabel = optional(($teacherOptions ?? collect())->firstWhere('id', $user->premium_teacher_id))->name ?? $text['not_set'];
+                            $currentSubjectOption = collect($subjectOptions ?? [])->firstWhere('key', $user->premium_subject_key);
+                            $currentSubjectLabel = $currentSubjectOption['label'] ?? $text['not_set'];
                             $currentDurationLabel = $durationLabelMap[$user->premium_duration] ?? $text['not_set'];
                             $selectedDuration = old('user_id') == $user->id ? old('premium_duration') : ($user->premium_duration ?? '');
                             $selectedScope = old('user_id') == $user->id ? old('premium_level_key') : ($user->premium_level_key ?? '');
+                            $selectedTeacher = old('user_id') == $user->id ? old('premium_teacher_id') : ($user->premium_teacher_id ?? '');
+                            $selectedSubject = old('user_id') == $user->id ? old('premium_subject_key') : ($user->premium_subject_key ?? '');
                             $selectedTier = old('user_id') == $user->id ? old('subscription_tier') : ($user->subscription_tier ?? 'free');
                         @endphp
 
@@ -195,6 +256,14 @@
                                     <div class="admin-meta-chip">
                                         <span>{{ $text['current_level'] }}</span>
                                         <strong>{{ $currentLevelLabel }}</strong>
+                                    </div>
+                                    <div class="admin-meta-chip">
+                                        <span>{{ $text['teacher_scope'] }}</span>
+                                        <strong>{{ $currentTeacherLabel }}</strong>
+                                    </div>
+                                    <div class="admin-meta-chip">
+                                        <span>{{ $text['subject_scope'] }}</span>
+                                        <strong>{{ $currentSubjectLabel }}</strong>
                                     </div>
                                     <div class="admin-meta-chip">
                                         <span>{{ $text['expires_at'] }}</span>
@@ -240,6 +309,30 @@
                                             @foreach ($levelOptions as $levelOption)
                                                 <option value="{{ $levelOption['key'] }}" @selected($selectedScope === $levelOption['key'])>
                                                     {{ $levelOption['label'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+
+                                    <label class="field" data-premium-teacher-field>
+                                        <span>{{ $text['teacher_scope'] }}</span>
+                                        <select name="premium_teacher_id">
+                                            <option value="">{{ $text['not_set'] }}</option>
+                                            @foreach ($teacherOptions as $teacherOption)
+                                                <option value="{{ $teacherOption->id }}" @selected((string) $selectedTeacher === (string) $teacherOption->id)>
+                                                    {{ $teacherOption->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+
+                                    <label class="field" data-premium-subject-field>
+                                        <span>{{ $text['subject_scope'] }}</span>
+                                        <select name="premium_subject_key">
+                                            <option value="">{{ $text['not_set'] }}</option>
+                                            @foreach ($subjectOptions as $subjectOption)
+                                                <option value="{{ $subjectOption['key'] }}" @selected($selectedSubject === $subjectOption['key'])>
+                                                    {{ $subjectOption['label'] }}
                                                 </option>
                                             @endforeach
                                         </select>
