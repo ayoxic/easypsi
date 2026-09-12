@@ -2626,48 +2626,61 @@ select {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 20px;
-  min-height: 122px;
-  padding: 34px 38px;
-  border-radius: 32px;
+  gap: 14px;
+  min-height: 92px;
+  padding: 18px 22px;
+  border-radius: 20px;
   color: var(--brand-blue-deep);
-  font-size: 1.48rem;
+  font-size: 1.22rem;
   font-weight: 800;
   line-height: 1.2;
   background:
-    radial-gradient(circle at top right, rgba(255, 192, 74, 0.16), transparent 36%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 248, 233, 0.97));
-  border: 1px solid rgba(11, 78, 162, 0.09);
-  box-shadow: 0 18px 36px rgba(7, 47, 115, 0.08);
+    radial-gradient(circle at 12% 16%, rgba(255, 181, 57, 0.16), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(255, 249, 237, 0.98));
+  border: 1px solid rgba(11, 78, 162, 0.14);
+  box-shadow: 0 14px 30px rgba(7, 47, 115, 0.08);
   opacity: 0;
   transform: translate3d(0, 18px, 0);
-  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
 .welcome-level-pills__item::after {
-  content: "";
-  position: absolute;
-  inset: 12px;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 204, 102, 0.26);
-  pointer-events: none;
+  display: none;
 }
 
 .welcome-level-pills__item:hover {
-  transform: translate3d(0, -4px, 0);
-  border-color: rgba(240, 139, 16, 0.2);
-  box-shadow: 0 24px 42px rgba(7, 47, 115, 0.12);
+  transform: translate3d(0, -3px, 0);
+  border-color: rgba(240, 139, 16, 0.36);
+  background:
+    radial-gradient(circle at 12% 16%, rgba(11, 78, 162, 0.12), transparent 30%),
+    linear-gradient(180deg, #ffffff, rgba(255, 246, 229, 0.98));
+  box-shadow: 0 18px 34px rgba(7, 47, 115, 0.11);
 }
 
 .welcome-level-pills__dot {
+  display: grid;
+  place-items: center;
   flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ffb02e, #0b4ea2);
+  width: 54px;
+  height: 54px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 176, 46, 0.28);
   box-shadow:
-    0 0 0 12px rgba(255, 176, 46, 0.14),
-    0 10px 24px rgba(11, 78, 162, 0.17);
+    0 10px 22px rgba(7, 47, 115, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.welcome-level-pills__dot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: var(--brand-blue);
+}
+
+.welcome-level-pills__item:nth-child(3) .welcome-level-pills__dot svg {
+  fill: var(--brand-orange);
 }
 
 .welcome-level-pills__item span:last-child {
@@ -8037,13 +8050,14 @@ body.teacher-course-page {
   }
 
   .welcome-editorial--meeting .welcome-level-pills__item::after {
-    inset: 6px;
-    border-radius: 12px;
+    display: none;
   }
 
   .welcome-editorial--meeting .welcome-level-pills__dot {
-    width: 12px;
-    height: 12px;
+    width: 30px;
+    height: 30px;
+    padding: 6px;
+    border-radius: 10px;
   }
 
   .welcome-editorial--meeting .welcome-editorial__visual {
@@ -8294,10 +8308,12 @@ body.teacher-course-page {
   }
 
   .welcome-level-pills__dot {
-    width: 12px;
-    height: 12px;
+    width: 30px;
+    height: 30px;
+    padding: 6px;
+    border-radius: 10px;
     box-shadow:
-      0 0 0 6px rgba(255, 176, 46, 0.16),
+      0 0 0 5px rgba(255, 176, 46, 0.12),
       0 6px 12px rgba(11, 78, 162, 0.14);
   }
 
@@ -9431,7 +9447,13 @@ body.teacher-course-page {
   box-shadow: none !important;
 }
 
-body:has(.welcome-masterpiece),
+body:has(.welcome-masterpiece) {
+  background:
+    radial-gradient(circle at 16% 12%, rgba(255, 138, 0, 0.08), transparent 24%),
+    radial-gradient(circle at 88% 18%, rgba(255, 191, 52, 0.08), transparent 22%),
+    linear-gradient(135deg, #ffffff 0%, #fffdf9 56%, #ffffff 100%) !important;
+}
+
 body.payment-history-page {
   background:
     radial-gradient(circle at 16% 12%, rgba(255, 138, 0, 0.2), transparent 26%),
@@ -9442,6 +9464,22 @@ body.payment-history-page {
 .welcome-masterpiece,
 .welcome-masterpiece__shell {
   background: transparent !important;
+}
+
+.welcome-masterpiece__hero,
+.welcome-masterpiece__section,
+.welcome-masterpiece__footer {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 177, 55, 0.2), transparent 28%),
+    radial-gradient(circle at 90% 12%, rgba(255, 138, 0, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(255, 244, 224, 0.96), rgba(255, 225, 176, 0.7)) !important;
+  border: 1px solid rgba(255, 160, 38, 0.18) !important;
+  box-shadow: 0 24px 58px rgba(172, 101, 19, 0.08) !important;
+  border-radius: 32px;
+}
+
+.welcome-masterpiece__section {
+  padding: 30px;
 }
 
 .welcome-masterpiece--borderless .welcome-masterpiece__nav {
@@ -9743,3 +9781,105 @@ body.payment-history-page {
 }
 
 [data-teacher-track-select][hidden] { display: none; }
+
+@media (max-width: 760px) {
+  html,
+  body:has(.welcome-masterpiece) {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .welcome-masterpiece {
+    width: 100%;
+    max-width: 100vw;
+    padding-inline: 6px;
+    overflow-x: hidden;
+  }
+
+  .welcome-masterpiece__shell {
+    width: 100%;
+    max-width: 100%;
+    gap: 18px;
+  }
+
+  .welcome-masterpiece__nav {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: minmax(72px, 0.82fr) minmax(54px, 0.56fr) minmax(84px, 0.88fr) minmax(92px, 1fr);
+    gap: 5px;
+    padding: 7px;
+    overflow: hidden;
+  }
+
+  .welcome-masterpiece__brand {
+    gap: 5px;
+    overflow: hidden;
+  }
+
+  .welcome-masterpiece__brand-logo {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+  }
+
+  .welcome-masterpiece__brand-copy strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.72rem;
+  }
+
+  .welcome-masterpiece__actions .welcome-masterpiece__whatsapp {
+    display: none !important;
+  }
+
+  .welcome-masterpiece__actions .locale-pill,
+  .welcome-masterpiece__actions .welcome-masterpiece__login,
+  .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
+    min-height: 34px;
+    padding-inline: 4px;
+    border-radius: 9px;
+    font-size: 0.56rem;
+    line-height: 1.1;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .welcome-masterpiece__hero,
+  .welcome-masterpiece__section {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px 12px 18px;
+    border-radius: 22px;
+    overflow: hidden;
+  }
+
+  .welcome-masterpiece__hero-copy h1,
+  .welcome-masterpiece__section-head h2 {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .welcome-course-preview,
+  .welcome-course-preview__image {
+    max-width: 100%;
+  }
+
+  .welcome-masterpiece .student-hero-actions,
+  .welcome-masterpiece .welcome-course-preview__actions {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .welcome-masterpiece .student-hero-actions .primary-btn,
+  .welcome-masterpiece .student-hero-actions .secondary-btn,
+  .welcome-masterpiece .welcome-course-preview__actions .primary-btn,
+  .welcome-masterpiece .welcome-course-preview__actions .secondary-btn {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 6px;
+    white-space: normal;
+    text-align: center;
+  }
+}

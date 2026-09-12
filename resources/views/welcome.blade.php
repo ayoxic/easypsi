@@ -207,9 +207,30 @@
                 <div class="welcome-editorial welcome-editorial--meeting">
                     <div class="welcome-editorial__copy welcome-editorial__copy--spotlight welcome-scroll-reveal welcome-scroll-reveal--left welcome-text-reveal">
                         <ul class="welcome-level-pills">
-                            @foreach ($copy['levels_pills'] as $pill)
+                            @foreach ($copy['levels_pills'] as $index => $pill)
                                 <li class="welcome-level-pills__item">
-                                    <span class="welcome-level-pills__dot"></span>
+                                    <span class="welcome-level-pills__dot">
+                                        @if ($index === 0)
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M5 21V9.7L12 5l7 4.7V21h-5v-6h-4v6H5Z"></path>
+                                                <path d="M8.2 10.2h2.2v2.2H8.2v-2.2Zm5.4 0h2.2v2.2h-2.2v-2.2Z"></path>
+                                            </svg>
+                                        @elseif ($index === 1)
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M4 20V6.8L12 3l8 3.8V20H4Zm4-10h3V8H8v2Zm5 0h3V8h-3v2Zm-5 4h3v-2H8v2Zm5 0h3v-2h-3v2Z"></path>
+                                                <path d="M10 20v-4h4v4h-4Z"></path>
+                                            </svg>
+                                        @elseif ($index === 2)
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M12 4 2 9l10 5 8-4v6h2V9L12 4Z"></path>
+                                                <path d="M6 12.2V16c0 1.8 2.7 3.2 6 3.2s6-1.4 6-3.2v-3.8l-6 3-6-3Z"></path>
+                                            </svg>
+                                        @else
+                                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M12 3 3 8v2h18V8l-9-5Zm-6 9v6H4v3h16v-3h-2v-6h-3v6h-2v-6h-2v6H9v-6H6Z"></path>
+                                            </svg>
+                                        @endif
+                                    </span>
                                     <span>{{ $pill }}</span>
                                 </li>
                             @endforeach
