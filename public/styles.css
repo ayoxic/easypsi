@@ -7709,12 +7709,12 @@ body.teacher-course-page {
   .welcome-masterpiece__nav {
     top: 8px;
     display: grid;
-    grid-template-columns: auto 1.2fr repeat(3, minmax(0, 0.72fr));
-    gap: 8px;
-    padding: 8px 10px;
+    grid-template-columns: minmax(94px, auto) minmax(54px, 0.55fr) minmax(84px, 0.85fr) minmax(112px, 1fr);
+    gap: 6px;
+    padding: 8px;
     border-radius: 18px;
     overflow: visible;
-    align-items: start;
+    align-items: center;
   }
 
   .welcome-masterpiece__menu {
@@ -7724,10 +7724,11 @@ body.teacher-course-page {
   .welcome-masterpiece__brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 0;
     grid-column: 1;
     grid-row: 1;
+    min-width: 0;
   }
 
   .welcome-masterpiece__brand-logo {
@@ -7738,54 +7739,49 @@ body.teacher-course-page {
   }
 
   .welcome-masterpiece__brand-copy strong {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
   }
 
   .welcome-masterpiece__actions {
     display: contents;
   }
 
-  .welcome-masterpiece__actions .welcome-masterpiece__whatsapp,
-  .welcome-masterpiece__actions .locale-switcher {
+  .welcome-masterpiece__actions .locale-switcher,
+  .welcome-masterpiece__actions .welcome-masterpiece__login,
+  .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
     grid-row: 1;
   }
 
-  .welcome-masterpiece__actions .welcome-masterpiece__login,
-  .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
-    grid-row: 2;
+  .welcome-masterpiece__actions .welcome-masterpiece__whatsapp {
+    display: none;
   }
 
   .welcome-masterpiece__actions .locale-switcher {
-    grid-column: 3 / 6;
+    grid-column: 2;
     min-width: 0;
     display: flex;
     width: 100%;
   }
 
-  .welcome-masterpiece__actions .welcome-masterpiece__whatsapp {
-    grid-column: 2 / 3;
-  }
-
   .welcome-masterpiece__actions .welcome-masterpiece__login {
-    grid-column: 1 / 3;
+    grid-column: 3;
     margin-inline-end: 0;
   }
 
   .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
-    grid-column: 3 / 6;
+    grid-column: 4;
     margin-inline-start: 0;
   }
 
   .welcome-masterpiece__actions .locale-pill,
-  .welcome-masterpiece__actions .welcome-masterpiece__whatsapp,
   .welcome-masterpiece__actions .welcome-masterpiece__login,
   .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
     width: 100%;
     min-width: 0;
-    min-height: 34px;
-    padding-inline: 6px;
+    min-height: 38px;
+    padding-inline: 5px;
     border-radius: 10px;
-    font-size: 0.64rem;
+    font-size: 0.62rem;
     justify-content: center;
     white-space: nowrap;
   }
@@ -7840,6 +7836,26 @@ body.teacher-course-page {
 
   .welcome-masterpiece__nav-cta {
     box-shadow: 0 12px 22px rgba(20, 71, 160, 0.2);
+  }
+
+  @media (max-width: 390px) {
+    .welcome-masterpiece__nav {
+      grid-template-columns: minmax(82px, auto) minmax(48px, 0.48fr) minmax(72px, 0.72fr) minmax(96px, 1fr);
+      gap: 4px;
+      padding: 7px;
+    }
+
+    .welcome-masterpiece__brand-logo {
+      width: 28px;
+      height: 28px;
+    }
+
+    .welcome-masterpiece__brand-copy strong,
+    .welcome-masterpiece__actions .locale-pill,
+    .welcome-masterpiece__actions .welcome-masterpiece__login,
+    .welcome-masterpiece__actions .welcome-masterpiece__nav-cta {
+      font-size: 0.56rem;
+    }
   }
 
   .welcome-masterpiece__hero {
